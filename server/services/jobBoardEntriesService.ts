@@ -49,40 +49,37 @@ export const jobBoardEntriesService = {
       throw createHttpError(403, "You are not authorized to update this job board entry");
     }
 
-    // If reordering the same status
-    // Temporarily update the number to -1 to avoid conflicts
-    if (status === currentEntry.status && number !== currentEntry.number) {
-      await prisma.jobBoardEntry.update({
-        where: { id },
-        data: {
-          number: -1
-        }
-      });
-    }
+    const needsReorder = status !== currentEntry.status || number !== currentEntry.number;
 
-    const greaterStatusEntries = await prisma.jobBoardEntry.findMany({ where:
-      { 
-        userId, 
-        status,
-        number: {
-          gte: number
-        },
-        id: {
-          not: id
-        }
-      },
-      orderBy: {
-        number: 'desc',
-      },
-    });
+    if (needsReorder) {
+      // If reordering within the same status, temporarily set to -1 to avoid conflicts
+      if (status === currentEntry.status && number !== currentEntry.number) {
+        await prisma.jobBoardEntry.update({
+          where: { id },
+          data: {
+            number: -1
+          }
+        });
+      }
 
-    for (const entry of greaterStatusEntries) {
-      await prisma.jobBoardEntry.update({
-        where: { id: entry.id },
-        data: {
-          number: entry.number + 1,
+      const greaterStatusEntries = await prisma.jobBoardEntry.findMany({
+        where: {
+          userId,
+          status,
+          number: { gte: number },
+          id: { not: id },
         },
+        orderBy: { number: "desc" },
       });
+
+      for (const entry of greaterStatusEntries) {
+        await prisma.jobBoardEntry.update({
+          where: { id: entry.id },
+          data: {
+            number: entry.number + 1,
+          },
+        });
+      }
     }
 
     return await prisma.jobBoardEntry.update({

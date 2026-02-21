@@ -27,7 +27,7 @@ services:
       - ./client:/app
       - /app/node_modules
       - /app/.next
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm install && while true; do npm run dev || (echo 'Dev server exited, restarting in 2s...' && sleep 2); done"
     environment:
       NODE_ENV: development
       WATCHPACK_POLLING: "true"

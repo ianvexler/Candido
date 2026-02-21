@@ -18,11 +18,7 @@ const Navbar = () => {
 
   return (
     <header className="border-b border-border bg-background">
-      <nav className="mx-auto flex items-center justify-between px-6 py-4">
-        <Link href="/" className="text-lg font-semibold text-foreground">
-          Workbench
-        </Link>
-
+      <nav className="mx-auto flex items-center justify-end px-6 py-4">
         <ul className="flex gap-6 items-center">
           {navLinks.map(({ href, label }) => (
             <li key={href}>

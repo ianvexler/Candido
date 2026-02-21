@@ -6,9 +6,10 @@ import { CollisionPriority } from '@dnd-kit/abstract';
 interface JobBoardColumnProps {
   status: JobStatus;
   entries: JobBoardEntry[];
+  onSelectJob: (job: JobBoardEntry) => void;
 }
 
-const JobBoardColumn = ({ status, entries }: JobBoardColumnProps) => {
+const JobBoardColumn = ({ status, entries, onSelectJob }: JobBoardColumnProps) => {
   const { ref } = useDroppable({
     id: status,
     type: 'column',
@@ -22,7 +23,7 @@ const JobBoardColumn = ({ status, entries }: JobBoardColumnProps) => {
 
       {entries.map((entry, index) => (
         <div key={entry.id}>
-          <JobBoardCard entry={entry} index={index} />
+          <JobBoardCard entry={entry} index={index} onSelectJob={onSelectJob} />
         </div>
       ))}
     </div>

@@ -14,12 +14,19 @@ import { move } from "@dnd-kit/helpers";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { Sheet } from "@/components/ui/sheet";
+import EditJobSheet from "@/components/jobBoard/EditJobSheet";
 
 const JobBoardPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
+
+  const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
+
   const snapshotRef = useRef<JobBoardEntry[]>([]);
   const latestEntriesRef = useRef<JobBoardEntry[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
     void getJobBoardEntries()
@@ -80,89 +87,116 @@ const JobBoardPage = () => {
     return result;
   };
 
+  const handleSelectJob = (job: JobBoardEntry) => {
+    scrollPositionRef.current = scrollContainerRef.current?.scrollLeft ?? 0;
+    setSelectedJob(job);
+  };
+
+  const onUpdateJob = (job: JobBoardEntry) => {
+    setJobBoardEntries((prev) => prev.map((entry) => entry.id === job.id ? job : entry));
+    setSelectedJob(undefined);
+  };
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col min-h-0 flex-1">
-      <div className="flex justify-between items-center shrink-0">
-        <div>
-          <Title>Job Board</Title>
-          <Description className="mt-1">Track your job applications</Description>
-        </div>
+    <>
+      <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col min-h-0 flex-1">
+        <div className="flex justify-between items-center shrink-0">
+          <div>
+            <Title>Job Board</Title>
+            <Description className="mt-1">Track your job applications</Description>
+          </div>
 
-        <div className="flex flex-col justify-start">
-          <Button onClick={() => setOpenAddJobModal(true)}>
-            <PlusIcon className="size-4" />
-            Add Job
-          </Button>
-        </div>
-      </div>
-
-      <DragDropProvider
-        onDragStart={() => {
-          snapshotRef.current = [...jobBoardEntries];
-        }}
-        onDragOver={(event) => {
-          const { source } = event.operation;
-          if (source?.type === "column") {
-            return;
-          }
-
-          setJobBoardEntries((entries) => {
-            const grouped = groupEntriesByStatus(entries);
-            const movedGrouped = move(grouped, event);
-            const result = flattenWithUpdates(movedGrouped);
-            latestEntriesRef.current = result;
-            return result;
-          });
-        }}
-        onDragEnd={(event) => {
-          if (event.canceled) {
-            setJobBoardEntries(snapshotRef.current);
-            return;
-          }
-
-          const { source } = event.operation;
-          if (!isSortable(source)) {
-            return;
-          }
-
-          const { index, group } = source;
-          if (!group || !Object.values(JobStatus).includes(group as JobStatus)) {
-            return;
-          }
-
-          if (index < 0) {
-            return;
-          }
-
-          const newStatus = group as JobStatus;
-          const movedEntry = latestEntriesRef.current.find((e) => e.id === source.id);
-
-          if (movedEntry) {
-            void handleUpdateEntry(movedEntry, newStatus, index);
-          }
-        }}
-      >
-        <div className="overflow-x-auto overflow-y-hidden px-5 pb-5 mt-8">
-          <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-7 [&>div]:first:pl-0">
-            {Object.values(JobStatus).map((status: JobStatus) => (
-              <JobBoardColumn
-                key={status}
-                status={status}
-                entries={jobBoardEntries
-                  .filter((e) => e.status === status)
-                  .sort((a, b) => a.number - b.number)}
-              />
-            ))}
+          <div className="flex flex-col justify-start">
+            <Button onClick={() => setOpenAddJobModal(true)}>
+              <PlusIcon className="size-4" />
+              Add Job
+            </Button>
           </div>
         </div>
-      </DragDropProvider>
 
-      <AddJobModal 
-        isOpen={openAddJobModal} 
-        onClose={() => setOpenAddJobModal(false)} 
-        onAddJob={onAddJob}
-      />
-    </div>
+        <DragDropProvider
+          onDragStart={() => {
+            snapshotRef.current = [...jobBoardEntries];
+          }}
+          onDragOver={(event) => {
+            const { source } = event.operation;
+            if (source?.type === "column") {
+              return;
+            }
+
+            setJobBoardEntries((entries) => {
+              const grouped = groupEntriesByStatus(entries);
+              const movedGrouped = move(grouped, event);
+              const result = flattenWithUpdates(movedGrouped);
+              latestEntriesRef.current = result;
+              return result;
+            });
+          }}
+          onDragEnd={(event) => {
+            if (event.canceled) {
+              setJobBoardEntries(snapshotRef.current);
+              return;
+            }
+
+            const { source } = event.operation;
+            if (!isSortable(source)) {
+              return;
+            }
+
+            const { index, group } = source;
+            if (!group || !Object.values(JobStatus).includes(group as JobStatus)) {
+              return;
+            }
+
+            if (index < 0) {
+              return;
+            }
+
+            const newStatus = group as JobStatus;
+            const movedEntry = latestEntriesRef.current.find((e) => e.id === source.id);
+
+            if (movedEntry) {
+              void handleUpdateEntry(movedEntry, newStatus, index);
+            }
+          }}
+        >
+          <div
+            ref={scrollContainerRef}
+            className="overflow-x-auto overflow-y-hidden px-5 pb-5 mt-8"
+          >
+            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-7 [&>div]:first:pl-0">
+              {Object.values(JobStatus).map((status: JobStatus) => (
+                <JobBoardColumn
+                  key={status}
+                  status={status}
+                  entries={jobBoardEntries
+                    .filter((e) => e.status === status)
+                    .sort((a, b) => a.number - b.number)}
+                  onSelectJob={handleSelectJob}
+                />
+              ))}
+            </div>
+          </div>
+        </DragDropProvider>
+
+        <AddJobModal 
+          isOpen={openAddJobModal} 
+          onClose={() => setOpenAddJobModal(false)} 
+          onAddJob={onAddJob}
+        />
+      </div>
+
+      <Sheet open={!!selectedJob} onOpenChange={() => setSelectedJob(undefined)}>
+        {selectedJob && (
+          <EditJobSheet 
+            entry={selectedJob}
+            allEntries={jobBoardEntries}
+            onClose={() => setSelectedJob(undefined)}
+            onUpdateJob={onUpdateJob}
+          />
+        )}
+      </Sheet>
+    </>
   );
 };
 

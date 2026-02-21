@@ -5,10 +5,11 @@ import { useSortable } from "@dnd-kit/react/sortable";
 interface JobBoardCardProps {
   entry: JobBoardEntry;
   index: number;
+  onSelectJob: (job: JobBoardEntry) => void;
 }
 
-const JobBoardCard = ({ entry, index }: JobBoardCardProps) => {
-  const {ref, isDragging} = useSortable({
+const JobBoardCard = ({ entry, index, onSelectJob }: JobBoardCardProps) => {
+  const { ref, isDragging } = useSortable({
     id: entry.id,
     index,
     type: "item",
@@ -17,7 +18,12 @@ const JobBoardCard = ({ entry, index }: JobBoardCardProps) => {
   });
 
   return (
-    <Card ref={ref} data-dragging={isDragging} className="cursor-grab active:cursor-grabbing hover:bg-accent active:bg-accent">
+    <Card
+      ref={ref}
+      data-dragging={isDragging}
+      className="cursor-grab active:cursor-grabbing hover:bg-accent active:bg-accent"
+      onClick={() => onSelectJob(entry)}
+    >
       <CardContent>
         <h3 className="text-lg font-bold">{entry.title}</h3>
         <p className="text-sm text-gray-500">{entry.company}</p>

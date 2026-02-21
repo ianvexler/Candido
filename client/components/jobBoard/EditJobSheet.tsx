@@ -1,38 +1,33 @@
-import { useEffect, SubmitEvent, useState } from "react";
-import Modal from "react-modal";
-import Title from "../common/Title";
-import Description from "../common/Description";
 import { XIcon } from "lucide-react";
-import { Input } from "../ui/Input";
-import { Label } from "../ui/Label";
-import { Button } from "../ui/Button";
+import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { capitalize } from "@/lib/utils";
-import { createJobBoardEntry } from "@/api/resources/jobBoardEntries/createJobBoardEntry";
+import { useState, SubmitEvent } from "react";
 import toast from "react-hot-toast";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
+import { Label } from "../ui/Label";
+import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 
-interface AddJobModalProps {
-  isOpen: boolean;
+interface EditJobSheetProps {
+  entry: JobBoardEntry;
+  allEntries: JobBoardEntry[];
   onClose: () => void;
-  onAddJob: (job: JobBoardEntry) => void;
+  onUpdateJob: (job: JobBoardEntry) => void;
 }
 
-const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
-  const [title, setTitle] = useState<string>("");
-  const [company, setCompany] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [salary, setSalary] = useState<string>("");
-  const [url, setUrl] = useState<string>("");
-  const [status, setStatus] = useState<JobStatus>(JobStatus.PENDING);
-  const [description] = useState<string>("");
+const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetProps) => {
+  const [title, setTitle] = useState<string>(entry.title);
+  const [company, setCompany] = useState<string>(entry.company);
+  const [location, setLocation] = useState<string>(entry.location ?? "");
+  const [salary, setSalary] = useState<string>(entry.salary ?? "");
+  const [url, setUrl] = useState<string>(entry.url ?? "");
+  const [status, setStatus] = useState<JobStatus>(entry.status);
+  const [description] = useState<string>(entry.description ?? "");
 
   const [loading, setLoading] = useState<boolean>(false);
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
-
-  useEffect(() => {
-    Modal.setAppElement(document.body);
-  }, []);
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -46,56 +41,52 @@ const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
     }
 
     try {
-      const response = await createJobBoardEntry(title, company, location, salary, url, status, description);
-      onAddJob(response.jobBoardEntry);
+      let newNumber: number;
+      if (status === entry.status) {
+        newNumber = entry.number;
+      } else {
+        const entriesInNewStatus = allEntries.filter((e: JobBoardEntry) => e.status === status);
+        const maxNumber = entriesInNewStatus.length > 0
+          ? Math.max(...entriesInNewStatus.map((e: JobBoardEntry) => e.number))
+          : 0;
+        newNumber = maxNumber + 1;
+      }
 
-      toast.success("Job added successfully");
+      const response = await updateJobBoardEntry(entry.id, title, company, location, salary, url, description, status, newNumber);
+      onUpdateJob(response.jobBoardEntry);
+
+      toast.success("Job updated successfully");
       onClose();
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const isTitleValid = title.length > 0;
   const isCompanyValid = company.length > 0;
   const isFormValid = isTitleValid && isCompanyValid;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={onClose}
-      style={{
-        overlay: {
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        content: {
-          position: "relative",
-          margin: 0,
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-        },
-      }}
-      className="bg-background w-full xl:w-2/3 max-w-2xl"
+    <SheetContent 
+      showCloseButton={false} 
+      onOpenAutoFocus={(e) => e.preventDefault()} 
+      className="sm:max-w-lg"
+      onInteractOutside={(e) => e.preventDefault()}
     >
-      <div className="p-8">
-        <div className="flex flex-row items-center justify-between">
-          <div>
-            <Title>Add Job</Title>
-            <Description>Add a new job to your job board</Description>
-          </div>
-          
-          <div className="cursor-pointer flex flex-col items-center justify-start hover:opacity-50" onClick={onClose}>
-            <XIcon className="size-6" />
-          </div>
-        </div>
+      <SheetHeader className="flex flex-row justify-between items-center">
+        <SheetTitle>Edit Job</SheetTitle>
 
+        <div className="cursor-pointer flex flex-col items-center justify-start hover:opacity-50" onClick={onClose}>
+          <XIcon className="size-5" />
+        </div>
+      </SheetHeader>
+
+      <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 px-4 pb-4">
         <form onSubmit={onSubmit}>
           <div className="flex flex-row gap-3 mt-4">            
-            <div className="flex-3 min-w-0">
+            <div className="flex-10 min-w-0">
               <div className="flex flex-col gap-1">
                 <Label>Title*</Label>
                 <Input
@@ -114,7 +105,7 @@ const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
               </div>
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-4 min-w-0">
               <div className="flex flex-col gap-1 w-full">
                 <Label>Status*</Label>
                 <Select
@@ -173,7 +164,7 @@ const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
                 />
               </div>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-2 min-w-0">
               <div className="flex flex-col gap-1 mt-4">
                 <Label>Salary</Label>
                 <Input
@@ -206,8 +197,8 @@ const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
           </Button>
         </form>
       </div>
-    </Modal>
+    </SheetContent>
   );
 };
 
-export default AddJobModal;
+export default EditJobSheet;
