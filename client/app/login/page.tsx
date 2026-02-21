@@ -12,9 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/Alert";
 
 const LoginPage = () => {
   const searchParams = useSearchParams();

@@ -1,14 +1,8 @@
 import type { Request, Response } from "express";
 import { sessionsService } from "../services/sessionsService.js";
+import { getToken } from "@/middleware/requireAuth.js";
 
 const AUTH_TOKEN = "auth_token";
-
-const getToken = (req: Request): string | undefined => {
-  return (
-    req.headers.authorization?.replace("Bearer ", "") ??
-    req.cookies?.[AUTH_TOKEN]
-  );
-}
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -66,11 +60,12 @@ export const register = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   const token = getToken(req);
   if (!token) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Not authenticated" });
   }
 
   await sessionsService.deleteSession(token);
   res.clearCookie(AUTH_TOKEN, { path: "/" });
+  
   return res.status(200).json({ message: "Logged out successfully" });
 };
 

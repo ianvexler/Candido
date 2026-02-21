@@ -50,6 +50,11 @@ export const sessionsService = {
   },
 
   async register(email: string, password: string, name: string) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      throw createHttpError(400, "User already exists");
+    }
+
     const user = await prisma.user.create({
       data: {
         email,

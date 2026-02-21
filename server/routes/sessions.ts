@@ -1,11 +1,15 @@
 import { Router } from "express";
 import * as sessionsController from "../controllers/sessionsController.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = Router();
 
+// Public routes
 router.post("/", sessionsController.login);
-router.delete("/", sessionsController.logout);
-router.get("/me", sessionsController.me);
 router.post("/register", sessionsController.register);
+
+// Protected routes
+router.delete("/", requireAuth, sessionsController.logout);
+router.get("/me", requireAuth, sessionsController.me);
 
 export default router;

@@ -1,14 +1,15 @@
 "use client";
 
 import Title from "@/components/common/Title";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
 import { redirect, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SubmitEvent, useEffect, useState } from "react";
 import Link from "@/components/common/Link";
+import { AxiosError } from "axios";
 
 const RegisterPage = () => {
   const searchParams = useSearchParams();
@@ -37,6 +38,11 @@ const RegisterPage = () => {
       redirect(from);
 
     } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.error ?? "Login failed");
+        return;
+      }
+
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
