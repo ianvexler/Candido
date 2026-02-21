@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+COMMAND=$1
+
+case "$COMMAND" in
+  stack)
+    echo "Starting docker compose stack..."
+    echo "→ Installing backend dependencies..."
+    docker compose run --rm server npm install
+    echo "→ Starting services..."
+    DOCKER_BUILDKIT=1 BUILDKIT_INLINE_CACHE=0 BUILDKIT_PROVENANCE=0 docker compose up --build --remove-orphans
+    ;;
+  
+  client)
+    echo "Running command in client..."
+    docker compose run --rm client "${@:2}"
+    ;;
+  
+  
+  server)
+    echo "Running command in server..."
+    docker compose run --rm server "${@:2}"
+    ;;  
+
+  *)
+    echo "Usage: $0 [stack|client|server]"
+    exit 1
+esac
