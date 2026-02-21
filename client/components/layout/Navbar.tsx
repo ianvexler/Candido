@@ -5,7 +5,7 @@ const navLinks = [
   { href: "/about", label: "About" },
 ];
 
-const Header = () => {
+const Navbar = () => {
   return (
     <header className="border-b border-border bg-background">
       <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
@@ -30,4 +30,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default Navbar;
