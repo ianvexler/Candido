@@ -1,6 +1,6 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
-  "include": ["src/**/*", "index.ts"],
+  "include": ["src/**/*", "index.ts", "lib/**/*", "generated/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     // File Layout
