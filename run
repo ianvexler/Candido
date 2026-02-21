@@ -19,7 +19,12 @@ case "$COMMAND" in
     echo "Running command in database..."
     docker compose run --rm server npx prisma "${@:2}"
     ;;
-  
+
+  server:prisma:studio)
+    echo "Running command in database..."
+    docker compose run --rm prisma-studio
+    ;;
+
   server)
     echo "Running command in server..."
     docker compose run --rm server "${@:2}"

@@ -1,14 +1,15 @@
 import { prisma } from "../lib/prisma.js";
 import { JobStatus } from "../generated/prisma/enums.js";
+import bcrypt from "bcrypt";
 
 async function main() {
   const user = await prisma.user.upsert({
-    where: { email: "alice@prisma.io" },
+    where: { email: "ianvexler@gmail.com" },
     update: {},
     create: {
-      email: "alice@prisma.io",
-      name: "Alice",
-      password: "password",
+      email: "ianvexler@gmail.com",
+      name: "Ian Vexler",
+      password: await bcrypt.hash("password", 10),
     },
   });
   console.log("Users created");

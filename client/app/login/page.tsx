@@ -15,6 +15,8 @@ import {
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertTitle } from "@/components/ui/Alert";
+import PageContainer from "@/components/common/PageContainer";
+import { Label } from "@/components/ui/Label";
 
 const LoginPage = () => {
   const searchParams = useSearchParams();
@@ -48,7 +50,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-md px-6 py-16 mt-20">
+    <PageContainer>
       <Title>Login</Title>
       <Card className="mt-8">
         <form onSubmit={onSubmit}>
@@ -65,9 +67,9 @@ const LoginPage = () => {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <Label htmlFor="email">
                 Email
-              </label>
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -80,9 +82,9 @@ const LoginPage = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+              <Label htmlFor="password">
                 Password
-              </label>
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -114,7 +116,7 @@ const LoginPage = () => {
           </CardFooter>
         </form>
       </Card>
-    </div>
+    </PageContainer>
   );
 };
 

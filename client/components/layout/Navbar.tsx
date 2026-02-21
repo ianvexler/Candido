@@ -6,7 +6,7 @@ import { Button } from "../ui/Button";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
+  { href: "/jobBoard", label: "Job Board" },
 ];
 
 const Navbar = () => {
@@ -18,7 +18,7 @@ const Navbar = () => {
 
   return (
     <header className="border-b border-border bg-background">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+      <nav className="mx-auto flex items-center justify-between px-6 py-4">
         <Link href="/" className="text-lg font-semibold text-foreground">
           Workbench
         </Link>

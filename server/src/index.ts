@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import type { Request, Response } from "express";
 import sessionsRouter from "../routes/sessions.js";
+import jobBoardEntriesRouter from "../routes/jobBoardEntries.js";
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use("/api/sessions", sessionsRouter);
+app.use("/api/job-board-entries", jobBoardEntriesRouter);
 
 const PORT = process.env["PORT"] ?? 8000;
 

@@ -1,26 +1,28 @@
-import { JobStatus } from "@/generated/prisma/enums.js";
 import { jobBoardEntriesService } from "@/services/jobBoardEntriesService.js";
 import type { Request, Response } from "express";
 
 export const getJobBoardEntries = async (req: Request, res: Response) => {
-  const { userId } = req.body;
+  const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntries = await jobBoardEntriesService.getJobBoardEntries(userId, JobStatus.PENDING);
+  const jobBoardEntries = await jobBoardEntriesService.getJobBoardEntries(userId);
   return res.status(200).json({ jobBoardEntries });
 };
 
 export const getJobBoardEntry = async (req: Request, res: Response) => {
-  const { id, userId } = req.body;
+  const userId = req.user!.id;
+  const { id } = req.body;
 
   const jobBoardEntry = await jobBoardEntriesService.getJobBoardEntry(userId, id);
   return res.status(200).json({ jobBoardEntry });
 };
 
 export const createJobBoardEntry = async (req: Request, res: Response) => {
-  const { userId, title, company, location, salary, url, description, status } = req.body;
+  const { title, company, location, salary, url, description, status } = req.body;
+  const userId = req.user!.id;
+
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
@@ -30,17 +32,19 @@ export const createJobBoardEntry = async (req: Request, res: Response) => {
 };
 
 export const updateJobBoardEntry = async (req: Request, res: Response) => {
-  const { userId, id, title, company, location, salary, url, description, status } = req.body;
+  const { id, title, company, location, salary, url, description, status, number } = req.body;
+  const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status);
+  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status, number);
   return res.status(200).json({ jobBoardEntry });
 };
 
 export const deleteJobBoardEntry = async (req: Request, res: Response) => {
-  const { userId, id } = req.body;
+  const { id } = req.body;
+  const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }

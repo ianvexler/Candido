@@ -3,8 +3,8 @@ import { prisma } from "../lib/prisma.js";
 import createHttpError from "http-errors";
 
 export const jobBoardEntriesService = {
-  async getJobBoardEntries(userId: number, status: JobStatus) {
-    return await prisma.jobBoardEntry.findMany({ where: { userId, status } });
+  async getJobBoardEntries(userId: number) {
+    return await prisma.jobBoardEntry.findMany({ where: { userId } });
   },
 
   async getJobBoardEntry(userId: number, id: number) {
@@ -33,12 +33,12 @@ export const jobBoardEntriesService = {
         salary,
         url,
         description,
-        number: number,
+        number: number + 1,
       },
     });
   },
 
-  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus) {
+  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus, number: number) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
 
     if (!currentEntry) {
@@ -49,10 +49,40 @@ export const jobBoardEntriesService = {
       throw createHttpError(403, "You are not authorized to update this job board entry");
     }
 
-    let newNumber: number = currentEntry.number;
-    if (currentEntry.status !== status) {
-      const number = await prisma.jobBoardEntry.count({ where: { userId, status } });
-      newNumber = number;
+    // If reordering the same status
+    // Temporarily update the number to -1 to avoid conflicts
+    if (status === currentEntry.status && number !== currentEntry.number) {
+      await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          number: -1
+        }
+      });
+    }
+
+    const greaterStatusEntries = await prisma.jobBoardEntry.findMany({ where:
+      { 
+        userId, 
+        status,
+        number: {
+          gte: number
+        },
+        id: {
+          not: id
+        }
+      },
+      orderBy: {
+        number: 'desc',
+      },
+    });
+
+    for (const entry of greaterStatusEntries) {
+      await prisma.jobBoardEntry.update({
+        where: { id: entry.id },
+        data: {
+          number: entry.number + 1,
+        },
+      });
     }
 
     return await prisma.jobBoardEntry.update({
@@ -65,7 +95,7 @@ export const jobBoardEntriesService = {
         url,
         description,
         status,
-        number: newNumber,
+        number: number,
       },
     });
   },

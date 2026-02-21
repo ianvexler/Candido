@@ -28,18 +28,21 @@ interface RootLayoutProps {
 
 const RootLayout = ({ children }: RootLayoutProps) => {
   return (
-    <AuthProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`} >
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}>
+        <AuthProvider>
           <Navbar />
-          
-          <main className="flex-1">{children}</main>
-          <Toaster position="bottom-right" />
+
+          <main className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 min-h-0 flex flex-col">{children}</div>
+          </main>
           
           <Footer />
-        </body>
-      </html>
-    </AuthProvider>
+          
+          <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
+        </AuthProvider>
+      </body>
+    </html>
   );
 };
 

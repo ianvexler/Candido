@@ -4,11 +4,12 @@ import { login } from "@/api/resources/sessions/login";
 import { logout } from "@/api/resources/sessions/logout";
 import { getCurrentUser } from "@/api/resources/sessions/getCurrentUser";
 import { register } from "@/api/resources/sessions/register";
+import Loader from "@/components/common/Loader";
 import useAuthStore from "@/lib/stores/authStore";
 import type { User } from "@/lib/types";
 import { AxiosError, HttpStatusCode } from "axios";
-import { redirect } from "next/navigation";
-import { createContext, ReactNode, useCallback, useContext, useEffect } from "react";
+import { redirect, usePathname } from "next/navigation";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 type AuthContextType = {
@@ -32,10 +33,14 @@ export const useAuth = () => {
 const permittedRoutes = ['/login', '/register'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const pathname = usePathname();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
   const user = useAuthStore((state) => state.user);
-  
   const setUser = useAuthStore((state) => state.setUser);
   const clearSession = useAuthStore((state) => state.clearSession);
+
+  const isPermittedRoute = permittedRoutes.includes(pathname ?? "");
 
   const handleLogin = async (email: string, password: string) => {
     const response = await login(email, password);
@@ -64,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (permittedRoutes.includes(window.location.pathname)) {
+    if (isPermittedRoute) {
       return;
     }
 
@@ -82,8 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           throw error;
         }
+      })
+      .finally(() => {
+        setIsAuthChecking(false);
       });
-  }, [setUser, clearSession, handleUnauthorized]);
+  }, [isPermittedRoute, setUser, clearSession, handleUnauthorized]);
 
   const value = {
     user,
@@ -93,9 +101,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     handleRegister
   };
 
+  const showLoader = !isPermittedRoute && (isAuthChecking || !isAuthenticated);
+
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {showLoader ? (
+        <div className="flex min-h-screen flex-col items-center justify-center">
+          <Loader size="lg" />
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };
