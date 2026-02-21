@@ -7,9 +7,6 @@ COMMAND=$1
 case "$COMMAND" in
   stack)
     echo "Starting docker compose stack..."
-    echo "→ Installing backend dependencies..."
-    docker compose run --rm server npm install
-    echo "→ Starting services..."
     DOCKER_BUILDKIT=1 BUILDKIT_INLINE_CACHE=0 BUILDKIT_PROVENANCE=0 docker compose up --build --remove-orphans
     ;;
   

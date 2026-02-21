@@ -14,10 +14,10 @@ From the project root:
 ./run stack
 ```
 
-This builds and starts both services:
+This builds and starts both services in **development mode** with hot reload:
 
-- **Client** (Next.js): [http://localhost:3000](http://localhost:3000)
-- **Server** (Express API): [http://localhost:8000](http://localhost:8000)
+- **Client** (Next.js): [http://localhost:3000](http://localhost:3000) — changes to the client are reflected on refresh
+- **Server** (Express API): [http://localhost:8000](http://localhost:8000) — server restarts automatically on file changes
 
 ## Other commands
 
