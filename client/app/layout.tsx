@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ian's Workbench",
+  title: "Candido",
   description: "A Next.js app with Express API",
 };
 

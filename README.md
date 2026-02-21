@@ -1,6 +1,6 @@
-# Ian's Workbench
+# Candido
 
-Hi! This is my personal workbench: a place where I'll be building and experimenting with tools to help me manage my own work and tasks.
+Candido is a job application tracker that helps you manage your job search. Add roles you're interested in, move them through stages as you progress, and keep everything organized in one place.
 
 A full-stack app with a Next.js client and an Express API server, run via Docker Compose.
 
@@ -19,7 +19,7 @@ From the project root:
 This builds and starts the full stack in **development mode** with hot reload:
 
 | Service | URL |
-|---------|-----|-------------|
+|---------|-----|
 | **Client** (Next.js) | [http://localhost:3000](http://localhost:3000) |
 | **Server** (Express API) | [http://localhost:8000](http://localhost:8000) |
 | **Database** (PostgreSQL) | localhost:5432 |
