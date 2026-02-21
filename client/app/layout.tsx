@@ -4,6 +4,8 @@ import "./globals.css";
 import { ReactNode } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,15 +28,18 @@ interface RootLayoutProps {
 
 const RootLayout = ({ children }: RootLayoutProps) => {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
-      >
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </body>
-    </html>
+    <AuthProvider>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`} >
+          <Navbar />
+          
+          <main className="flex-1">{children}</main>
+          <Toaster position="bottom-right" />
+          
+          <Footer />
+        </body>
+      </html>
+    </AuthProvider>
   );
 };
 

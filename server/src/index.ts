@@ -1,11 +1,16 @@
 import "dotenv/config";
+import cors from "cors";
 import express from "express";
 import type { Request, Response } from "express";
 import sessionsRouter from "../routes/sessions.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
+
+app.use(cookieParser());
 
 app.get("/", (_req: Request, res: Response) => {
   res.send("API is running");

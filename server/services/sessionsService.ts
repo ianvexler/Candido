@@ -4,7 +4,7 @@ import { addDays } from "date-fns";
 import createHttpError from "http-errors";
 import { prisma } from "../lib/prisma.js";
 
-export const sessionsServices = {
+export const sessionsService = {
   async authenticate(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -41,4 +41,24 @@ export const sessionsServices = {
       where: { token },
     });
   },
+
+  async findSession(token: string) {
+    return prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+  },
+
+  async register(email: string, password: string, name: string) {
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: await bcrypt.hash(password, 10),
+        name,
+      },
+    });
+    
+    const session = await this.createSession(user.id);
+    return { user, session };
+  }
 };

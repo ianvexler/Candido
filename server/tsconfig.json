@@ -5,6 +5,10 @@
   "compilerOptions": {
     // File Layout
     "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "outDir": "./dist",
 
     "module": "nodenext",
