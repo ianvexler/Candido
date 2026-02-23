@@ -9,6 +9,10 @@ import { Input } from "../ui/Input";
 import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
 import { Label } from "../ui/Label";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
+import { EditorContent, useEditor } from "@tiptap/react";
+import SimpleMenuBar from "../richEditor/simpleEditor/SimpleMenuBar";
+import { TextStyleKit } from '@tiptap/extension-text-style'
+import StarterKit from '@tiptap/starter-kit'
 
 interface EditJobSheetProps {
   entry: JobBoardEntry;
@@ -28,6 +32,13 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
 
   const [loading, setLoading] = useState<boolean>(false);
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
+
+  const extensions = [TextStyleKit, StarterKit]
+  const editor = useEditor({
+    extensions,
+    immediatelyRender: false,
+    content: description,
+  });
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -52,7 +63,8 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
         newNumber = maxNumber + 1;
       }
 
-      const response = await updateJobBoardEntry(entry.id, title, company, location, salary, url, description, status, newNumber);
+      const editorDescription = editor?.getHTML() ?? "";
+      const response = await updateJobBoardEntry(entry.id, title, company, location, salary, url, editorDescription, status, newNumber);      
       onUpdateJob(response.jobBoardEntry);
 
       toast.success("Job updated successfully");
@@ -72,10 +84,9 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
     <SheetContent 
       showCloseButton={false} 
       onOpenAutoFocus={(e) => e.preventDefault()} 
-      className="sm:max-w-lg"
-      onInteractOutside={(e) => e.preventDefault()}
+      className="sm:max-w-xl p-5 gap-2"
     >
-      <SheetHeader className="flex flex-row justify-between items-center">
+      <SheetHeader className="flex flex-row justify-between items-center pb-4 border-b border-border">
         <SheetTitle>Edit Job</SheetTitle>
 
         <div className="cursor-pointer flex flex-col items-center justify-start hover:opacity-50" onClick={onClose}>
@@ -87,7 +98,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
         <form onSubmit={onSubmit}>
           <div className="flex flex-row gap-3 mt-4">            
             <div className="flex-10 min-w-0">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 <Label>Title*</Label>
                 <Input
                   id="title"
@@ -106,7 +117,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
             </div>
 
             <div className="flex-4 min-w-0">
-              <div className="flex flex-col gap-1 w-full">
+              <div className="flex flex-col gap-2 w-full">
                 <Label>Status*</Label>
                 <Select
                   value={status}
@@ -133,7 +144,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
 
           <div className="flex flex-row gap-3">            
             <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-1 mt-4">
+              <div className="flex flex-col gap-2 mt-4">
                 <Label>Company*</Label>
                 <Input
                   id="company"
@@ -151,7 +162,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
               </div>
             </div>
             <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-1 mt-4">
+              <div className="flex flex-col gap-2 mt-4">
                 <Label>Location</Label>
                 <Input
                   id="location"
@@ -165,7 +176,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
               </div>
             </div>
             <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-1 mt-4">
+              <div className="flex flex-col gap-2 mt-4">
                 <Label>Salary</Label>
                 <Input
                   id="salary"
@@ -176,11 +187,11 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
                   disabled={loading}
                   placeholder="Salary..."
                 />
-            </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 mt-4">
+          <div className="flex flex-col gap-2 mt-4">
             <Label>URL</Label>
             <Input
               id="url"
@@ -192,9 +203,23 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="mt-4">
-            {loading ? "Submitting..." : "Submit"}
-          </Button>
+          <div className="mt-4 flex flex-col gap-2">
+            <Label>Description</Label>
+
+            <div className="simple-editor-wrapper ">
+              <SimpleMenuBar editor={editor} />
+              <EditorContent 
+                editor={editor} 
+                
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button type="submit" disabled={loading} className="mt-4">
+              {loading ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
         </form>
       </div>
     </SheetContent>

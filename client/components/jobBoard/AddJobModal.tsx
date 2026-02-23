@@ -201,9 +201,11 @@ const AddJobModal = ({isOpen, onClose, onAddJob}: AddJobModalProps) => {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="mt-4">
-            {loading ? "Submitting..." : "Submit"}
-          </Button>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={loading} className="mt-4">
+              {loading ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
         </form>
       </div>
     </Modal>
