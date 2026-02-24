@@ -1,4 +1,4 @@
-<img src="Candido.png" alt="Candido" width="200" />
+<img src="candido.png" alt="Candido" width="200" />
 
 <hr />
 
