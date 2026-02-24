@@ -1,4 +1,6 @@
-<img src="candido.png" alt="Candido" width="200" />
+<div align="center">
+  <img src="candido.png" alt="Candido" width="200" />
+</div>
 
 <hr />
 
