@@ -17,7 +17,7 @@ import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/sheet";
 import EditJobSheet from "@/components/jobBoard/EditJobSheet";
 
-const JobBoardPage = () => {
+const BoardPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
 
@@ -200,4 +200,4 @@ const JobBoardPage = () => {
   );
 };
 
-export default JobBoardPage;
+export default BoardPage;

@@ -13,9 +13,10 @@ export const getJobBoardEntries = async (req: Request, res: Response) => {
 
 export const getJobBoardEntry = async (req: Request, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.body;
+  const { id } = req.params;
 
-  const jobBoardEntry = await jobBoardEntriesService.getJobBoardEntry(userId, id);
+  const idNumber = parseInt(id as string);
+  const jobBoardEntry = await jobBoardEntriesService.getJobBoardEntry(userId, idNumber);
   return res.status(200).json({ jobBoardEntry });
 };
 
