@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/jobBoard", label: "Job Board" },
+  { href: "/board", label: "Board" },
 ];
 
 const Navbar = () => {
