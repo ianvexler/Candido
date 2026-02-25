@@ -34,9 +34,16 @@ export type JobBoardEntry = {
   createdAt: Date;
   updatedAt: Date;
   jobBoardTags: JobBoardTag[];
+  cvText?: string;
+  cvFilename?: string;
+  coverLetterText?: string;
+  coverLetterFilename?: string;
 }
 
 export type JobBoardTag = {
   id: number;
   name: string;
 }
+
+export const JobEntryFileTypes = ["CV", "Cover Letter"] as const;
+export type JobEntryFileType = (typeof JobEntryFileTypes)[number];

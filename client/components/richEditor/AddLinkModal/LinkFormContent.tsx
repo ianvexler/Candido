@@ -7,13 +7,20 @@ import { XIcon } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { Label } from "../../ui/Label";
 import { Button } from "../../ui/Button";
-import type { LinkModalState } from "./types";
 
 interface LinkFormContentProps {
   initialState: LinkModalState;
   onSubmit: (text: string, url: string, from?: number, to?: number) => void;
   onClose: () => void;
   onRemove?: (from?: number, to?: number) => void;
+}
+
+interface LinkModalState {
+  text: string;
+  url: string;
+  isEditing: boolean;
+  from?: number;
+  to?: number;
 }
 
 const LinkFormContent = ({

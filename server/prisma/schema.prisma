@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -13,30 +7,64 @@ datasource db {
   provider = "postgresql"
 }
 
-model User { 
-  id    Int     @id @default(autoincrement()) 
-  email String  @unique
-  name  String?
-  password String?
-  sessions Session[]
-
+model User {
+  id              Int             @id @default(autoincrement())
+  email           String          @unique
+  name            String?
+  password        String?
   jobBoardEntries JobBoardEntry[]
-  jobBoardTags JobBoardTag[]
-} 
+  jobBoardTags    JobBoardTag[]
+  sessions        Session[]
+}
 
 model Session {
-  id Int @id @default(autoincrement())
-  token String @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id])
-  userId Int
-
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([token])
+}
+
+model JobBoardEntry {
+  id                  Int           @id @default(autoincrement())
+  title               String
+  location            String?
+  description         String?
+  salary              String?
+  url                 String?
+  number              Int
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  status              JobStatus     @default(PENDING)
+  userId              Int
+  company             String
+  coverLetterText     String?
+  cvText              String?
+  coverLetterFilename String?
+  cvFilename          String?
+  user                User          @relation(fields: [userId], references: [id])
+  jobBoardTags        JobBoardTag[] @relation("JobBoardEntryToJobBoardTag")
+
+  @@unique([userId, status, number])
+  @@index([title])
+}
+
+model JobBoardTag {
+  id              Int             @id @default(autoincrement())
+  name            String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          Int
+  user            User            @relation(fields: [userId], references: [id])
+  jobBoardEntries JobBoardEntry[] @relation("JobBoardEntryToJobBoardTag")
+
+  @@unique([userId, name])
+  @@index([name])
 }
 
 enum JobStatus {
@@ -48,41 +76,4 @@ enum JobStatus {
   REJECTED
   ACCEPTED
   ARCHIVED
-}
-
-model JobBoardEntry {
-  id Int @id @default(autoincrement())
-  title String
-  company String
-  location String?
-  description String?
-  salary String?
-  url String?
-  number Int
-  status JobStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  jobBoardTags JobBoardTag[]
-
-  user User @relation(fields: [userId], references: [id])
-  userId Int
-
-  @@unique([userId, status, number])
-
-  @@index([title])
-}
-
-model JobBoardTag {
-  id Int @id @default(autoincrement())
-  name String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id])
-  userId Int
-
-  jobBoardEntries JobBoardEntry[]
-
-  @@index([name])
-  @@unique([userId, name])
 }

@@ -3,10 +3,10 @@
 import { getJobBoardEntry } from "@/api/resources/jobBoardEntries/getJobBoardEntry";
 import Loader from "@/components/common/Loader";
 import PageContainer from "@/components/common/PageContainer";
-import Title from "@/components/common/Title";
 import MainEntryForm from "@/components/jobBoard/entry/MainEntryForm";
 import { JobBoardEntry } from "@/lib/types";
 import { use, useEffect, useState } from "react";
+import EntryDocArea from "@/components/jobBoard/entry/EntryDocArea";
 
 interface BoardJobEntryPageProps {
   params: Promise<{ id: string }>;
@@ -27,6 +27,9 @@ const BoardJobEntry = ({ params }: BoardJobEntryPageProps) => {
     return () => { cancelled = true; };
   }, [id]);
   
+  const onFileUpdate = (entry: JobBoardEntry) => {
+    setJobEntry(entry);
+  }
 
   if (!jobEntry) {
     return (
@@ -38,12 +41,21 @@ const BoardJobEntry = ({ params }: BoardJobEntryPageProps) => {
 
   return (
     <PageContainer>
-      <Title>{jobEntry.title}</Title>
-      
-      <MainEntryForm
-        entry={jobEntry}
-        onUpdateEntry={setJobEntry}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-[500px_1fr] gap-4 w-full mt-3 min-w-0">
+        <div className="min-w-0">
+          <MainEntryForm
+            entry={jobEntry}
+            onUpdateEntry={setJobEntry}
+          />
+        </div>
+
+        <div className="min-w-0 overflow-hidden">
+          <EntryDocArea 
+            entry={jobEntry} 
+            onUpdateEntry={onFileUpdate} 
+          />
+        </div>
+      </div>
     </PageContainer>
   )
 }

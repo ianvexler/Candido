@@ -14,7 +14,7 @@ import { move } from "@dnd-kit/helpers";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Sheet } from "@/components/ui/sheet";
+import { Sheet } from "@/components/ui/Sheet";
 import EditJobSheet from "@/components/jobBoard/EditJobSheet";
 
 const BoardPage = () => {
@@ -99,10 +99,10 @@ const BoardPage = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-6 py-8 flex flex-col min-h-0 flex-1">
-        <div className="flex justify-between items-center shrink-0">
+      <div className="mx-auto max-w-[1280px] px-6 py-8 flex flex-col min-h-0 flex-1">
+        <div className="flex justify-between items-center shrink-0 px-1">
           <div>
-            <Title>Job Board</Title>
+            <Title>Board</Title>
             <Description className="mt-1">Track your job applications</Description>
           </div>
 
@@ -162,9 +162,9 @@ const BoardPage = () => {
         >
           <div
             ref={scrollContainerRef}
-            className="overflow-x-auto overflow-y-hidden px-5 pb-5 mt-8"
+            className="overflow-x-auto overflow-y-hidden pb-5 mt-8"
           >
-            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-7 [&>div]:first:pl-0">
+            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-6 [&>div]:first:pl-0 px-1">
               {Object.values(JobStatus).map((status: JobStatus) => (
                 <JobBoardColumn
                   key={status}

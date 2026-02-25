@@ -1,5 +1,5 @@
 import { XIcon } from "lucide-react";
-import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import { SheetContent, SheetHeader, SheetTitle } from "../ui/Sheet";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import { useState, SubmitEvent, useMemo } from "react";
@@ -15,6 +15,7 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import StarterKit from '@tiptap/starter-kit'
 import { redirect } from "next/navigation";
 import ConfirmationModal from "../common/ConfirmationModal";
+import SheetFileInputs from "./SheetFileInputs";
 
 interface EditJobSheetProps {
   entry: JobBoardEntry;
@@ -284,6 +285,10 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
               onChange={(e) => setUrl(e.target.value)}
               disabled={loading}
             />
+          </div>
+
+          <div className="mt-4">
+            <SheetFileInputs entry={entry} />
           </div>
 
           <div className="mt-4 flex flex-col gap-2">

@@ -4,7 +4,14 @@ import createHttpError from "http-errors";
 
 export const jobBoardEntriesService = {
   async getJobBoardEntries(userId: number) {
-    return await prisma.jobBoardEntry.findMany({ where: { userId } });
+    return await prisma.jobBoardEntry.findMany({ 
+      where: { 
+        userId 
+      }, 
+      include: { 
+        jobBoardTags: true 
+      } 
+    });
   },
 
   async getJobBoardEntry(userId: number, id: number) {
@@ -109,5 +116,89 @@ export const jobBoardEntriesService = {
     }
 
     return await prisma.jobBoardEntry.delete({ where: { id }});
-  }
+  },
+
+  async uploadCv(userId: number, id: number, cvText?: string, cvFilename?: string) {
+    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
+
+    if (!currentEntry) {
+      throw createHttpError(404, "Job board entry not found");
+    }
+
+    if (currentEntry.userId !== userId) {
+      throw createHttpError(403, "You are not authorized to upload a CV for this job board entry");
+    }
+
+    if (cvText) {
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          cvText,
+          cvFilename: null,
+        },
+      });
+    } else if (cvFilename) {
+      if (cvFilename.split(".").pop() !== "pdf") {
+        throw createHttpError(400, "Please upload a valid PDF file");
+      }
+      
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          cvText: null,
+          cvFilename,
+        },
+      });
+    } else {
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          cvText: null,
+          cvFilename: null,
+        },
+      });
+    }
+  },
+
+  async uploadCoverLetter(userId: number, id: number, coverLetterText?: string, coverLetterFilename?: string) {
+    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
+
+    if (!currentEntry) {
+      throw createHttpError(404, "Job board entry not found");
+    }
+
+    if (currentEntry.userId !== userId) {
+      throw createHttpError(403, "You are not authorized to upload a CV for this job board entry");
+    }
+
+    if (coverLetterText) {
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          coverLetterText,
+          coverLetterFilename: null,
+        },
+      });
+    } else if (coverLetterFilename) {
+      if (coverLetterFilename.split(".").pop() !== "pdf") {
+        throw createHttpError(400, "Please upload a valid PDF file");
+      }
+
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          coverLetterText: null,
+          coverLetterFilename,
+        },
+      });
+    } else {
+      return await prisma.jobBoardEntry.update({
+        where: { id },
+        data: {
+          coverLetterText: null,
+          coverLetterFilename: null,
+        },
+      });
+    }
+  },
 };

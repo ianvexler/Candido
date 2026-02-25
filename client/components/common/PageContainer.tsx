@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 const PageContainer = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
+    <div className="mx-auto w-full max-w-7xl px-6 py-6">
       {children}
     </div>
   );

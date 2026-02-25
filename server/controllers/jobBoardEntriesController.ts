@@ -53,3 +53,45 @@ export const deleteJobBoardEntry = async (req: Request, res: Response) => {
   const jobBoardEntry = await jobBoardEntriesService.deleteJobBoardEntry(userId, id);
   return res.status(200).json({ jobBoardEntry });
 };
+
+export const uploadCv = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { cvText } = req.body;
+  const cvFile = req.file;
+  const userId = req.user!.id;
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  const idNumber = parseInt(id as string);
+  const jobBoardEntry = await jobBoardEntriesService.uploadCv(
+    userId, 
+    idNumber,
+    cvText, 
+    cvFile?.filename
+  );
+
+  return res.status(200).json({ jobBoardEntry });
+};
+
+export const uploadCoverLetter = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { coverLetterText } = req.body;
+  const coverLetterFile = req.file;
+  const userId = req.user!.id;
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  const idNumber = parseInt(id as string);
+  const jobBoardEntry = await jobBoardEntriesService.uploadCoverLetter(
+    userId, 
+    idNumber, 
+    coverLetterText, 
+    coverLetterFile?.filename
+  );
+
+  return res.status(200).json({ jobBoardEntry });
+};

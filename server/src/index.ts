@@ -5,6 +5,7 @@ import type { Request, Response } from "express";
 import sessionsRouter from "../routes/sessions.js";
 import jobBoardEntriesRouter from "../routes/jobBoardEntries.js";
 import cookieParser from "cookie-parser";
+import uploadsRouter from "../routes/uploads.js";
 
 const app = express();
 
@@ -19,6 +20,9 @@ app.get("/", (_req: Request, res: Response) => {
 
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/job-board-entries", jobBoardEntriesRouter);
+
+// Returns uploaded files
+app.use("/uploads", uploadsRouter);
 
 const PORT = process.env["PORT"] ?? 8000;
 
