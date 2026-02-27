@@ -10,6 +10,7 @@ interface JobBoardCardProps {
   entry: JobBoardEntry;
   index: number;
   onSelectJob: (job: JobBoardEntry) => void;
+  displayStatus?: JobStatus;
 }
 
 const JOB_STATUS_COLORS: Record<JobStatus, string> = {
@@ -19,11 +20,11 @@ const JOB_STATUS_COLORS: Record<JobStatus, string> = {
   INTERVIEW: "bg-indigo-500",
   OFFERED: "bg-emerald-500",
   REJECTED: "bg-red-400",
-  ACCEPTED: "bg-green-500",
+  ACCEPTED: "bg-green-600",
   ARCHIVED: "bg-black",
 }
 
-const JobBoardCard = ({ entry, index, onSelectJob }: JobBoardCardProps) => {
+const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCardProps) => {
   const { ref, isDragging } = useSortable({
     id: entry.id,
     index,
@@ -45,7 +46,7 @@ const JobBoardCard = ({ entry, index, onSelectJob }: JobBoardCardProps) => {
     >
       <CardContent className="px-0">
         <div className="relative">
-          <div className={`absolute -left-[2px] top-0 bottom-0 w-[3px] ${JOB_STATUS_COLORS[entry.status]} rounded`} aria-hidden />
+          <div className={`absolute -left-[2px] top-0 bottom-0 w-[3px] ${JOB_STATUS_COLORS[displayStatus ?? entry.status]} rounded`} aria-hidden />
           <div className="px-4">
             <p className="text-sm font-medium">{entry.title}</p>
             <p className="text-xs text-gray-500">{entry.company}</p>

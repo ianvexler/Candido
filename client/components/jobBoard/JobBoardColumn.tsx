@@ -11,6 +11,7 @@ interface JobBoardColumnProps {
   status: JobStatus;
   entries: JobBoardEntry[];
   onSelectJob: (job: JobBoardEntry) => void;
+  draggedEntryOriginalStatus?: Record<number, JobStatus>;
 }
 
 const JOB_STATUS_ICON: Record<JobStatus, ReactNode> = {
@@ -24,7 +25,7 @@ const JOB_STATUS_ICON: Record<JobStatus, ReactNode> = {
   ARCHIVED: <ArchiveIcon className="size-4" />,
 }
 
-const JobBoardColumn = ({ status, entries, onSelectJob }: JobBoardColumnProps) => {
+const JobBoardColumn = ({ status, entries, onSelectJob, draggedEntryOriginalStatus }: JobBoardColumnProps) => {
   const { ref } = useDroppable({
     id: status,
     type: 'column',
@@ -44,7 +45,12 @@ const JobBoardColumn = ({ status, entries, onSelectJob }: JobBoardColumnProps) =
 
       {entries.map((entry, index) => (
         <div key={entry.id}>
-          <JobBoardCard entry={entry} index={index} onSelectJob={onSelectJob} />
+          <JobBoardCard
+            entry={entry}
+            index={index}
+            onSelectJob={onSelectJob}
+            displayStatus={draggedEntryOriginalStatus?.[entry.id]}
+          />
         </div>
       ))}
     </div>

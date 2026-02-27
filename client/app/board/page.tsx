@@ -10,6 +10,7 @@ import JobBoardColumn from "@/components/jobBoard/JobBoardColumn";
 import {
   ActionDropZones,
   ACTION_DROPPABLE_IDS,
+  ACCEPTED_DROPPABLE_ID,
   DELETE_DROPPABLE_ID,
   ARCHIVE_DROPPABLE_ID,
   REJECTED_DROPPABLE_ID,
@@ -36,6 +37,8 @@ const BoardPage = () => {
 
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
   const [isDragging, setIsDragging] = useState(false);
+  const [draggedFromOffered, setDraggedFromOffered] = useState(false);
+  const [draggedEntryOriginalStatus, setDraggedEntryOriginalStatus] = useState<Record<number, JobStatus>>();
 
   const [showRejected, setShowRejected] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -77,6 +80,17 @@ const BoardPage = () => {
       initializedRef.current = false;
     };
   }, [showArchived, showRejected]);
+
+  const showAccepted = useMemo(() => {
+    const hasAcceptedEntries = jobBoardEntries.some((e) => e.status === JobStatus.ACCEPTED);
+    
+    const isDraggingFromAccepted =
+      isDragging &&
+      draggedEntryOriginalStatus &&
+      Object.values(draggedEntryOriginalStatus).includes(JobStatus.ACCEPTED);
+    
+      return hasAcceptedEntries || isDraggingFromAccepted;
+  }, [jobBoardEntries, isDragging, draggedEntryOriginalStatus]);
 
   const onAddJob = (job: JobBoardEntry) => {
     setJobBoardEntries((prev) => [...prev, job]);
@@ -123,6 +137,7 @@ const BoardPage = () => {
         result.push({ ...entry, status: status as JobStatus, number: i + 1 });
       });
     }
+
     return result;
   };
 
@@ -151,6 +166,7 @@ const BoardPage = () => {
   const handleArchiveDrop = (entry: JobBoardEntry) => {
     const archivedCount = jobBoardEntries.filter((e) => e.status === JobStatus.ARCHIVED).length;
     const newNumber = archivedCount + 1;
+
     setJobBoardEntries((prev) =>
       prev.map((e) => (e.id === entry.id ? { ...e, status: JobStatus.ARCHIVED, number: newNumber } : e))
     );
@@ -160,15 +176,35 @@ const BoardPage = () => {
   const handleRejectedDrop = (entry: JobBoardEntry) => {
     const rejectedCount = jobBoardEntries.filter((e) => e.status === JobStatus.REJECTED).length;
     const newNumber = rejectedCount + 1;
+
     setJobBoardEntries((prev) =>
       prev.map((e) => (e.id === entry.id ? { ...e, status: JobStatus.REJECTED, number: newNumber } : e))
     );
     void handleUpdateEntry(entry, JobStatus.REJECTED, newNumber);
   };
 
-  const handleDragStart = () => {
+  const handleAcceptedDrop = (entry: JobBoardEntry) => {
+    const acceptedCount = jobBoardEntries.filter((e) => e.status === JobStatus.ACCEPTED).length;
+    const newNumber = acceptedCount + 1;
+
+    setJobBoardEntries((prev) =>
+      prev.map((e) => (e.id === entry.id ? { ...e, status: JobStatus.ACCEPTED, number: newNumber } : e))
+    );
+    void handleUpdateEntry(entry, JobStatus.ACCEPTED, newNumber);
+  };
+
+  const handleDragStart = (
+    event: Parameters<NonNullable<React.ComponentProps<typeof DragDropProvider>["onDragStart"]>>[0]
+  ) => {
     setIsDragging(true);
     snapshotRef.current = [...jobBoardEntries];
+    const source = event.operation?.source;
+    const group = source && "group" in source ? source.group : undefined;
+
+    setDraggedFromOffered(group === JobStatus.OFFERED);
+    const originalEntry = snapshotRef.current.find((e) => e.id === source?.id);
+
+    setDraggedEntryOriginalStatus(originalEntry ? { [originalEntry.id]: originalEntry.status } : undefined);
   };
 
   const handleDragOver = (event: Parameters<NonNullable<React.ComponentProps<typeof DragDropProvider>["onDragOver"]>>[0]) => {
@@ -191,6 +227,8 @@ const BoardPage = () => {
 
   const handleDragEnd = (event: Parameters<NonNullable<React.ComponentProps<typeof DragDropProvider>["onDragEnd"]>>[0]) => {
     setIsDragging(false);
+    setDraggedFromOffered(false);
+    setDraggedEntryOriginalStatus(undefined);
   
     if (event.canceled) {
       setJobBoardEntries(snapshotRef.current);
@@ -211,6 +249,10 @@ const BoardPage = () => {
       }
       if (target.id === REJECTED_DROPPABLE_ID) {
         handleRejectedDrop(entry);
+        return;
+      }
+      if (target.id === ACCEPTED_DROPPABLE_ID) {
+        handleAcceptedDrop(entry);
         return;
       }
     }
@@ -262,20 +304,17 @@ const BoardPage = () => {
     );
   };
 
-  const allTags = useMemo(
-    () =>
-      [
-        ...new Set(
-          jobBoardEntries.flatMap((e) =>
-            e.jobBoardTags?.map((t) => t.name) ?? []
-          )
-        ),
-      ].sort(),
-    [jobBoardEntries]
-  );
+  const allTags = useMemo(() => [
+    ...new Set(
+      jobBoardEntries.flatMap((e) =>
+        e.jobBoardTags?.map((t) => t.name) ?? []
+      )
+    ),
+  ].sort(), [jobBoardEntries]);
 
   const filteredEntries = useMemo(() => {
     let result = jobBoardEntries;
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -284,6 +323,7 @@ const BoardPage = () => {
           e.company.toLowerCase().includes(q)
       );
     }
+
     if (tags.length > 0) {
       result = result.filter((e) =>
         e.jobBoardTags?.some((t) => tags.includes(t.name))
@@ -417,14 +457,11 @@ const BoardPage = () => {
             ref={scrollContainerRef}
             className="overflow-x-auto overflow-y-hidden pb-5 mt-8"
           >
-            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-6 [&>div]:first:pl-0 px-1">
+            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-6 [&>div]:first:pl-0 [&>div]:last:pr-0 px-1">
               {Object.values(JobStatus).map((status: JobStatus) => {
-                if (!showRejected && status === JobStatus.REJECTED) {
-                  return null;
-                }
-                if (!showArchived && status === JobStatus.ARCHIVED) {
-                  return null;
-                }
+                if (!showRejected && status === JobStatus.REJECTED) return null;
+                if (!showArchived && status === JobStatus.ARCHIVED) return null;
+                if (!showAccepted && status === JobStatus.ACCEPTED) return null;
 
                 return (
                   <JobBoardColumn
@@ -434,13 +471,14 @@ const BoardPage = () => {
                       .filter((e) => e.status === status)
                       .sort((a, b) => a.number - b.number)}
                     onSelectJob={handleSelectJob}
+                    draggedEntryOriginalStatus={draggedEntryOriginalStatus}
                   />
                 );
               })}
             </div>
           </div>
 
-          {isDragging && <ActionDropZones />}
+          {isDragging && <ActionDropZones showAcceptedZone={draggedFromOffered} />}
         </DragDropProvider>
 
         <AddJobModal 
