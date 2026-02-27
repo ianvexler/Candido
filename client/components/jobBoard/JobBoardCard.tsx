@@ -1,8 +1,10 @@
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { Card, CardContent } from "../ui/Card";
 import { useSortable } from "@dnd-kit/react/sortable";
+import { useDragOperation } from "@dnd-kit/react";
 import { format } from "date-fns";
 import { CalendarIcon, GlobeIcon, TagIcon } from "lucide-react";
+import { ACTION_DROPPABLE_IDS } from "./ActionDropZones";
 
 interface JobBoardCardProps {
   entry: JobBoardEntry;
@@ -29,12 +31,16 @@ const JobBoardCard = ({ entry, index, onSelectJob }: JobBoardCardProps) => {
     accept: "item",
     group: entry.status,
   });
+  const { target } = useDragOperation();
+  const isOverActionZone = isDragging && target?.id && ACTION_DROPPABLE_IDS.includes(target.id as (typeof ACTION_DROPPABLE_IDS)[number]);
 
   return (
     <Card
       ref={ref}
       data-dragging={isDragging}
-      className="cursor-grab active:cursor-grabbing hover:bg-accent active:bg-accent w-[210px]"
+      className={`cursor-grab active:cursor-grabbing hover:bg-accent active:bg-accent w-[210px] transition-all ${
+        isOverActionZone ? "opacity-90 brightness-90" : ""
+      }`}
       onClick={() => onSelectJob(entry)}
     >
       <CardContent className="px-0">
@@ -64,19 +70,27 @@ const JobBoardCard = ({ entry, index, onSelectJob }: JobBoardCardProps) => {
             </div>
           )} */}
 
-          <div className="border-t border-border pt-3 mt-4 flex justify-between items-center">
-            {entry.location && (
-              <div className="flex items-center gap-1">
-                <GlobeIcon className="size-4" strokeWidth={1} />
-                <p>{entry.location}</p>
-              </div>
-            )}
+          <div className="border-t border-border pt-3 mt-4 flex justify-between items-center gap-2">
+            {(entry.location || entry.createdAt) && (
+              <>
+                <div className="flex items-center gap-1 min-w-0 max-w-[50%]">
+                  {entry.location && (
+                    <>
+                      <GlobeIcon className="size-4 shrink-0" strokeWidth={1} />
+                      <p className="truncate">{entry.location}</p>
+                    </>
+                  )}
+                </div>
 
-            {entry.createdAt && (
-              <div className="flex items-center gap-1">
-                <CalendarIcon className="size-4" strokeWidth={1} />
-                <p>{format(new Date(entry.createdAt), "MMM d, yyyy")}</p>
-              </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {entry.createdAt && (
+                    <>
+                      <CalendarIcon className="size-4" strokeWidth={1} />
+                      <p>{format(new Date(entry.createdAt), "MMM d, yyyy")}</p>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
