@@ -43,10 +43,12 @@ model JobBoardEntry {
   status              JobStatus     @default(PENDING)
   userId              Int
   company             String
-  coverLetterText     String?
-  cvText              String?
-  coverLetterFilename String?
-  cvFilename          String?
+  coverLetterText           String?
+  coverLetterFilename      String?
+  coverLetterOriginalFilename String?
+  cvText                   String?
+  cvFilename               String?
+  cvOriginalFilename       String?
   user                User          @relation(fields: [userId], references: [id])
   jobBoardTags        JobBoardTag[] @relation("JobBoardEntryToJobBoardTag")
 

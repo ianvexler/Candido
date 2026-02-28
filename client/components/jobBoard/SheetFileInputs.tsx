@@ -1,19 +1,20 @@
 import { JobBoardEntry } from "@/lib/types";
-import { DownloadIcon, PlusIcon } from "lucide-react";
-import { Button } from "../ui/Button";
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { getFileUpload } from "@/api/resources/uploads/getFileUpload";
 import toast from "react-hot-toast";
 import { uploadCVJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCVJobBoardEntry";
 import { uploadCoverLetterJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCoverLetterJobBoardEntry";
+import FileAttachment from "./FileAttachment";
 
 interface SheetFileInputsProps {
   entry: JobBoardEntry;
 }
 
 const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
-  const initialCVFile = entry.cvFilename ?? null;
-  const initialCoverLetterFile = entry.coverLetterFilename ?? null;
+  const initialCVFilename = entry.cvFilename ?? null;
+  const initialCVDisplayName = entry.cvOriginalFilename ?? entry.cvFilename ?? null;
+  const initialCoverLetterFilename = entry.coverLetterFilename ?? null;
+  const initialCoverLetterDisplayName = entry.coverLetterOriginalFilename ?? entry.coverLetterFilename ?? null;
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
@@ -22,24 +23,24 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
   const coverLetterFileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!initialCVFile) {
+    if (!initialCVFilename) {
       return;
     }
 
-    getFileUpload(initialCVFile).then((response) => {
-      setCvFile(new File([response], initialCVFile));
+    getFileUpload(initialCVFilename).then((response) => {
+      setCvFile(new File([response], initialCVDisplayName ?? initialCVFilename));
     });
-  }, [initialCVFile]);
+  }, [initialCVFilename, initialCVDisplayName]);
 
   useEffect(() => {
-    if (!initialCoverLetterFile) {
+    if (!initialCoverLetterFilename) {
       return;
     }
 
-    getFileUpload(initialCoverLetterFile).then((response) => {
-      setCoverLetterFile(new File([response], initialCoverLetterFile));
+    getFileUpload(initialCoverLetterFilename).then((response) => {
+      setCoverLetterFile(new File([response], initialCoverLetterDisplayName ?? initialCoverLetterFilename));
     });
-  }, [initialCoverLetterFile]);
+  }, [initialCoverLetterFilename, initialCoverLetterDisplayName]);
 
   const handleCvUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,7 +56,9 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
       console.error(error);
       toast.error("Failed to upload CV");
     }
-  }
+
+    e.target.value = "";
+  };
 
   const handleCoverLetterUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,7 +74,8 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
       console.error(error);
       toast.error("Failed to upload cover letter");
     }
-  }
+    e.target.value = "";
+  };
 
   const handleDownload = (file: File | null) => {
     if (!file) {
@@ -85,54 +89,44 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
     a.download = file.name;
     a.click();
     URL.revokeObjectURL(url);
+    
+  };
+
+  const handleDelete = async (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    setCvFile(null);
+    setCoverLetterFile(null);
+
+    try {
+      await uploadCoverLetterJobBoardEntry(entry.id, undefined, undefined);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete file");
+    }
   };
 
   return (
-    <div className="flex gap-2">
-      {cvFile ? (
-        <Button 
-          type="button"
-          variant="outline" 
-          className="gap-1" 
-          onClick={() => handleDownload(cvFile)}
-        >
-          Download CV
-          <DownloadIcon className="size-4" />
-        </Button>
-      ) : (
-        <Button 
-          type="button"
-          className="gap-1" 
-          onClick={() => cvFileInput.current?.click()}
-        >
-          Upload CV
-          <PlusIcon className="size-4" />
-        </Button>
-      )}
+    <div className="grid grid-cols-2 gap-3">
+      <FileAttachment
+        label="CV"
+        file={cvFile}
+        onUpload={handleCvUpload}
+        onDownload={() => handleDownload(cvFile)}
+        onDelete={() => handleDelete(cvFile)}
+        fileInputRef={cvFileInput}
+      />
 
-      {coverLetterFile ? (
-        <Button
-          type="button"
-          variant="outline" 
-          className="gap-1" 
-          onClick={() => handleDownload(coverLetterFile)}
-        >
-          Download Cover Letter
-          <DownloadIcon className="size-4" />
-        </Button>
-      ) : (
-        <Button 
-          type="button"
-          className="gap-1" 
-          onClick={() => coverLetterFileInput.current?.click()}
-        >
-          Upload Cover Letter
-          <PlusIcon className="size-4" />
-        </Button>
-      )}
-
-      <input type="file" ref={coverLetterFileInput} className="hidden" onChange={handleCoverLetterUpload} />
-      <input type="file" ref={cvFileInput} className="hidden" onChange={handleCvUpload} />
+      <FileAttachment
+        label="Cover Letter"
+        file={coverLetterFile}
+        onUpload={handleCoverLetterUpload}
+        onDownload={() => handleDownload(coverLetterFile)}
+        onDelete={() => handleDelete(coverLetterFile)}
+        fileInputRef={coverLetterFileInput}
+      />
     </div>
   );
 };

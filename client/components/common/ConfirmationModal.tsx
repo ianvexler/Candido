@@ -6,7 +6,7 @@ import { Button } from "../ui/Button";
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   description?: string;
   confirmLabel?: string;
@@ -24,8 +24,8 @@ const ConfirmationModal = ({
   cancelLabel = "Cancel",
   variant = "default",
 }: ConfirmationModalProps) => {
-  const handleConfirm = () => {
-    onConfirm();
+  const handleConfirm = async () => {
+    await onConfirm();
     onClose();
   };
 

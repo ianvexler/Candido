@@ -148,7 +148,7 @@ const BoardPage = () => {
 
   const onUpdateJob = (job: JobBoardEntry) => {
     setJobBoardEntries((prev) => prev.map((entry) => entry.id === job.id ? job : entry));
-    setSelectedJob(undefined);
+    setSelectedJob((prev) => (prev?.id === job.id ? job : prev));
   };
 
   const handleDeleteDrop = (entry: JobBoardEntry) => {
@@ -334,7 +334,7 @@ const BoardPage = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-[1280px] px-6 py-8 flex flex-col min-h-0 flex-1">
+      <div className="mx-auto max-w-[1280px] px-6 pt-12 pb-8 flex flex-col min-h-0 flex-1">
         <div className="flex justify-between items-center shrink-0 px-1">
           <div>
             <Title>Board</Title>

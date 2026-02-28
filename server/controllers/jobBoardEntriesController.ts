@@ -66,10 +66,11 @@ export const uploadCv = async (req: Request, res: Response) => {
 
   const idNumber = parseInt(id as string);
   const jobBoardEntry = await jobBoardEntriesService.uploadCv(
-    userId, 
+    userId,
     idNumber,
-    cvText, 
-    cvFile?.filename
+    cvText,
+    cvFile?.filename,
+    cvFile?.originalname
   );
 
   return res.status(200).json({ jobBoardEntry });
@@ -87,10 +88,11 @@ export const uploadCoverLetter = async (req: Request, res: Response) => {
 
   const idNumber = parseInt(id as string);
   const jobBoardEntry = await jobBoardEntriesService.uploadCoverLetter(
-    userId, 
-    idNumber, 
-    coverLetterText, 
-    coverLetterFile?.filename
+    userId,
+    idNumber,
+    coverLetterText,
+    coverLetterFile?.filename,
+    coverLetterFile?.originalname
   );
 
   return res.status(200).json({ jobBoardEntry });

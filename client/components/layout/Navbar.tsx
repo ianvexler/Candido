@@ -2,63 +2,57 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import { Button } from "../ui/Button";
 import Image from "next/image";
-import MainLogo from '@/lib/images/MainLogo.png'
-import { useEffect, useState } from "react";
+import Logo from "@/lib/images/SmallLogo.png";
+import { HomeIcon, KanbanIcon, LogOutIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/board", label: "Board" },
+  { href: "/", icon: HomeIcon, label: "Home" },
+  { href: "/board", icon: KanbanIcon, label: "Board" },
 ];
 
 const Navbar = () => {
   const { isAuthenticated, handleLogout } = useAuth();
-  const [hasScrolled, setHasScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setHasScrolled(window.scrollY > 0);
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const pathname = usePathname();
 
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <header
-      className={`border-b border-border bg-[#222222] transition-shadow duration-200 ${
-        hasScrolled ? "shadow-md" : ""
-      }`}
-    >
-      <nav className="mx-auto flex items-center justify-between px-6 py-4">
-        <Link href="/" className="pb-1 pl-3">
-          <Image src={MainLogo} alt="Candido" height={50} />
-        </Link>
+    <aside className="fixed left-0 top-0 z-10 flex h-screen w-18 shrink-0 flex-col items-center border-r border-border bg-candido-black py-4 mr-16">
+      <Link href="/" className="mb-6">
+        <Image src={Logo} alt="Candido" width={34} height={36} className="rounded" />
+      </Link>
 
-        <ul className="flex gap-6 items-center">
-          {navLinks.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="hover:text-gray-300 transition-colors text-white"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-          <Button
-            onClick={() => handleLogout()}
-            variant="outline"
-            className="border-gray-300 bg-white text-black hover:bg-gray-200"
+      <nav className="flex flex-1 flex-col gap-2">
+        {navLinks.map(({ href, icon: Icon, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className={`flex size-10 items-center justify-center rounded-lg transition-colors ${
+              pathname === href || (href !== "/" && pathname.startsWith(href))
+                ? "bg-white/10 text-white"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
+            }`}
+            aria-label={label}
+            title={label}
           >
-            Logout
-          </Button>
-        </ul>
+            <Icon className="size-5" />
+          </Link>
+        ))}
       </nav>
-    </header>
+
+      <button
+        onClick={() => handleLogout()}
+        className="cursor-pointer flex size-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
+        aria-label="Logout"
+        title="Logout"
+      >
+        <LogOutIcon className="size-5" />
+      </button>
+    </aside>
   );
 };
 

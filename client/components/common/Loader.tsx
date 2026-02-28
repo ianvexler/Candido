@@ -5,15 +5,20 @@ type LoaderSize = "sm" | "md" | "lg";
 interface LoaderProps {
   size?: LoaderSize;
   message?: string;
-  /** Centers the loader in its container with min-height */
   centered?: boolean;
   className?: string;
 }
 
-const sizeClasses: Record<LoaderSize, string> = {
-  sm: "size-5 border-2",
-  md: "size-8 border-2",
-  lg: "size-12 border-[3px]",
+const dotSizes: Record<LoaderSize, string> = {
+  sm: "size-1.5",
+  md: "size-2",
+  lg: "size-2.5",
+};
+
+const gapSizes: Record<LoaderSize, string> = {
+  sm: "gap-1",
+  md: "gap-1.5",
+  lg: "gap-2",
 };
 
 const Loader = ({
@@ -25,19 +30,26 @@ const Loader = ({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3",
+        "flex flex-col items-center justify-center gap-4",
         centered && "min-h-48",
         className
       )}
       role="status"
       aria-label={message ?? "Loading"}
     >
-      <div
-        className={cn(
-          "rounded-full border-primary/30 border-t-primary animate-spin",
-          sizeClasses[size]
-        )}
-      />
+      <div className={cn("flex items-center", gapSizes[size])}>
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "rounded-full bg-primary",
+              dotSizes[size],
+              "animate-[loaderDotBounce_0.6s_ease-in-out_infinite]"
+            )}
+            style={{ animationDelay: `${i * 0.15}s` }}
+          />
+        ))}
+      </div>
       {message && (
         <p className="text-sm text-muted-foreground animate-pulse">{message}</p>
       )}

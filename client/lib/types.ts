@@ -36,8 +36,10 @@ export type JobBoardEntry = {
   jobBoardTags: JobBoardTag[];
   cvText?: string;
   cvFilename?: string;
+  cvOriginalFilename?: string;
   coverLetterText?: string;
   coverLetterFilename?: string;
+  coverLetterOriginalFilename?: string;
 }
 
 export type JobBoardTag = {

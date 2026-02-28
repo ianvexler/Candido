@@ -1,13 +1,15 @@
 import { XIcon } from "lucide-react";
-import { SheetContent, SheetHeader, SheetTitle } from "../ui/Sheet";
+import { VisuallyHidden } from "radix-ui";
+import { SheetContent, SheetTitle } from "../ui/Sheet";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
-import { useState, SubmitEvent, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
+import debounce from "lodash.debounce";
 import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
+import InlineInput from "../ui/InlineInput";
+import { FieldLabel } from "../ui/Field";
 import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
-import { Label } from "../ui/Label";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 import { EditorContent, useEditor } from "@tiptap/react";
 import SimpleMenuBar from "../richEditor/simpleEditor/SimpleMenuBar";
@@ -36,7 +38,6 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
   const [editorHtml, setEditorHtml] = useState(description);
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
 
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState<boolean>(false);
   const [discardChangesModalOpen, setDiscardChangesModalOpen] = useState<boolean>(false);
@@ -61,34 +62,33 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
       editorHtml !== description;
   }, [title, entry, company, location, salary, url, status, editorHtml, description]);
 
-  const performSubmit = async (): Promise<boolean> => {
-    setFormSubmitted(true);
-    setLoading(true);
+  const stateRef = useRef({ title, company, location, salary, url, status, editorHtml });
+  stateRef.current = { title, company, location, salary, url, status, editorHtml };
 
-    if (!isFormValid) {
-      toast.error("Please fill in all required fields");
-      setLoading(false);
+  const performSave = useCallback(async (): Promise<boolean> => {
+    const { title: t, company: c, location: loc, salary: sal, url: u, status: s, editorHtml: html } = stateRef.current;
+
+    if (!t.trim() || !c.trim()) {
+      toast.error("Title and company are required");
       return false;
     }
 
+    setLoading(true);
     try {
       let newNumber: number;
-      if (status === entry.status) {
+      if (s === entry.status) {
         newNumber = entry.number;
       } else {
-        const entriesInNewStatus = allEntries.filter((e: JobBoardEntry) => e.status === status);
+        const entriesInNewStatus = allEntries.filter((e: JobBoardEntry) => e.status === s);
         const maxNumber = entriesInNewStatus.length > 0
           ? Math.max(...entriesInNewStatus.map((e: JobBoardEntry) => e.number))
           : 0;
         newNumber = maxNumber + 1;
       }
 
-      const editorDescription = editor?.getHTML() ?? "";
-      const response = await updateJobBoardEntry(entry.id, title, company, location, salary, url, editorDescription, status, newNumber);
+      const response = await updateJobBoardEntry(entry.id, t, c, loc, sal, u, html, s, newNumber);
       
       onUpdateJob(response.jobBoardEntry);
-      toast.success("Job updated successfully");
-      
       return true;
     } catch (error) {
       console.error(error);
@@ -97,19 +97,24 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
     } finally {
       setLoading(false);
     }
-  };
+  }, [entry.id, entry.status, entry.number, allEntries, onUpdateJob]);
 
-  const onSubmit = async (e: SubmitEvent) => {
-    e.preventDefault();
+  const debouncedSave = useMemo(
+    () => debounce(() => {
+      performSave();
+    }, 600),
+    [performSave]
+  );
 
-    const success = await performSubmit();
-    if (success) {
-      onClose();
-    }
-  };
+  useEffect(() => {
+    if (!hasUpdatedFields) return;
+    debouncedSave();
+    return () => debouncedSave.cancel();
+  }, [title, company, location, salary, url, status, editorHtml, hasUpdatedFields, debouncedSave]);
 
   const handleConfirmation = async () => {
-    const success = await performSubmit();
+    debouncedSave.cancel();
+    const success = await performSave();
 
     if (success) {
       setIsConfirmationModalOpen(false);
@@ -145,16 +150,25 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
   }
 
   const handleSaveChanges = async () => {
-    const success = await performSubmit();
+    debouncedSave.cancel();
+    const success = await performSave();
 
     if (success) {
+      setDiscardChangesModalOpen(false);
       onClose();
     }
   }
 
-  const isTitleValid = title.length > 0;
-  const isCompanyValid = company.length > 0;
-  const isFormValid = isTitleValid && isCompanyValid;
+  const STATUS_COLORS: Record<JobStatus, string> = {
+    PENDING: "bg-slate-300",
+    APPLIED: "bg-yellow-500",
+    ASSESSMENT: "bg-cyan-500",
+    INTERVIEW: "bg-indigo-500",
+    OFFERED: "bg-emerald-500",
+    REJECTED: "bg-red-400",
+    ACCEPTED: "bg-green-600",
+    ARCHIVED: "bg-black",
+  };
 
   return (
     <SheetContent 
@@ -168,69 +182,52 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
         e.preventDefault();
         handleCancelClick();
       }}
-      className="sm:max-w-xl p-5 gap-2"
+      className="sm:max-w-2xl p-0 gap-0 flex flex-col border-l border-border"
     >
-      <SheetHeader className="flex flex-row justify-between items-center pb-4 border-b border-border">
-        <SheetTitle>Edit Job</SheetTitle>
+      <VisuallyHidden.Root>
+        <SheetTitle>Edit job: {title || "Untitled"}</SheetTitle>
+      </VisuallyHidden.Root>
 
-        <div className="cursor-pointer flex flex-col items-center justify-start hover:opacity-50" onClick={handleCancelClick}>
-          <XIcon className="size-5" />
-        </div>
-      </SheetHeader>
-
-      <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 px-4 pb-4">
-        <form onSubmit={onSubmit}>
-          <div className="flex flex-row gap-3 mt-4">            
-            <div className="flex-10 min-w-0">
-              <div className="flex flex-col gap-2">
-                <Label>Title*</Label>
-                <Input
-                  id="title"
-                  type="text"
-                  autoComplete="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={loading}
-                  placeholder="Job title..."
-                  className={formSubmitted && !isTitleValid ? "border-red-500" : ""}
-                />
-                {formSubmitted && !isTitleValid && (
-                  <p className="text-sm text-red-500">Title is required</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-4 min-w-0">
-              <div className="flex flex-col gap-2 w-full">
-                <Label>Status*</Label>
-                <Select
-                  value={status}
-                  onValueChange={(value) => setStatus(value as JobStatus)}
-                  disabled={loading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectGroup>
-                      {Object.values(JobStatus).map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {capitalize(status.toLowerCase())}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+      <div className="shrink-0 border-b border-border bg-muted/30">
+        <div className="flex items-start justify-between gap-4 px-6 py-5">
+          <div className="min-w-0 flex-1 flex items-center gap-3">
+            <div 
+              className={`shrink-0 w-5 h-5 rounded-sm ${STATUS_COLORS[status]}`}
+              title={capitalize(status.toLowerCase())}
+            />
+            <InlineInput
+              id="title"
+              type="text"
+              autoComplete="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              disabled={loading}
+              placeholder="Job title..."
+              className="text-2xl font-semibold tracking-tight bg-transparent border-b-0"
+            />
           </div>
 
-          <div className="flex flex-row gap-3">            
-            <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-2 mt-4">
-                <Label>Company*</Label>
-                <Input
+          <button
+            type="button"
+            onClick={handleCancelClick}
+            className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+          >
+            <XIcon className="size-7" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-8 overflow-y-auto flex-1 min-h-0 px-6 py-6">
+        <section className="space-y-5">
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-5">
+              <div className="flex flex-col gap-2">
+                <FieldLabel className="text-xs font-medium text-muted-foreground">
+                  Company
+                </FieldLabel>
+
+                <InlineInput
                   id="company"
                   type="text"
                   autoComplete="company"
@@ -238,87 +235,115 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
                   onChange={(e) => setCompany(e.target.value)}
                   disabled={loading}
                   placeholder="Company name..."
-                  className={formSubmitted && !isCompanyValid ? "border-red-500" : ""}
                 />
-                {formSubmitted && !isCompanyValid && (
-                  <p className="text-sm text-red-500">Company is required</p>
-                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <FieldLabel className="text-xs font-medium text-muted-foreground">
+                  Status
+                </FieldLabel>
+
+                <Select value={status} onValueChange={(v) => setStatus(v as JobStatus)} disabled={loading}>
+                  <SelectTrigger className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+  
+                  <SelectContent position="popper">
+                    <SelectGroup>
+                      {Object.values(JobStatus).map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {capitalize(s.toLowerCase())}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-2 mt-4">
-                <Label>Location</Label>
-                <Input
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-2">
+                <FieldLabel className="text-xs font-medium text-muted-foreground">
+                  Location
+                </FieldLabel>
+
+                <InlineInput
                   id="location"
                   type="text"
                   autoComplete="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   disabled={loading}
-                  placeholder="Location..."
+                  placeholder="e.g. Remote, New York"
                 />
               </div>
-            </div>
-            <div className="flex-2 min-w-0">
-              <div className="flex flex-col gap-2 mt-4">
-                <Label>Salary</Label>
-                <Input
+
+              <div className="flex flex-col gap-2">
+                <FieldLabel className="text-xs font-medium text-muted-foreground">
+                  Salary
+                </FieldLabel>
+
+                <InlineInput
                   id="salary"
                   type="text"
                   autoComplete="salary"
                   value={salary}
                   onChange={(e) => setSalary(e.target.value)}
                   disabled={loading}
-                  placeholder="Salary..."
+                  placeholder="e.g. $120k - $150k"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-2 mt-4">
-            <Label>URL</Label>
-            <Input
-              id="url"
-              type="text"
-              autoComplete="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={loading}
-            />
-          </div>
+            <div className="flex flex-col gap-2">
+              <FieldLabel className="text-xs font-medium text-muted-foreground">
+                URL
+              </FieldLabel>
 
-          <div className="mt-4">
-            <SheetFileInputs entry={entry} />
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2">
-            <Label>Description</Label>
-
-            <div className="simple-editor-wrapper ">
-              <SimpleMenuBar editor={editor} />
-              <EditorContent 
-                editor={editor}
-                className="min-h-[100px]"
+              <InlineInput
+                id="url"
+                type="text"
+                autoComplete="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+                placeholder="https://example.com"
               />
             </div>
           </div>
-          
-          <div className="flex justify-end mt-4">
-            <div className="flex gap-2">
-              <Button 
-                className="bg-blue-500 text-white hover:bg-blue-600"
-                type="button"
-                onClick={handleViewClick}
-              >
-                View
-              </Button>
+        </section>
 
-              <Button type="submit" disabled={loading || !hasUpdatedFields}>
-                {loading ? "Submitting..." : "Submit"}
-              </Button>
-            </div>
+        <section className="space-y-4">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Attachments
+          </h3>
+          <SheetFileInputs entry={entry} />
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Description
+          </h3>
+
+          <div className="simple-editor-wrapper rounded-lg border border-border bg-background overflow-hidden">
+            <SimpleMenuBar editor={editor} />
+            <EditorContent editor={editor} className="min-h-[140px]" />
           </div>
-        </form>
+        </section>
+        
+        <div className="flex items-center justify-end gap-3 pt-2">
+          {loading && (
+            <span className="text-sm text-muted-foreground animate-pulse">Saving...</span>
+          )}
+
+          <Button 
+            type="button"
+            variant="outline"
+            onClick={handleViewClick}
+          >
+            View full entry
+          </Button>
+        </div>
       </div>
 
       <ConfirmationModal

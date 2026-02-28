@@ -118,7 +118,7 @@ export const jobBoardEntriesService = {
     return await prisma.jobBoardEntry.delete({ where: { id }});
   },
 
-  async uploadCv(userId: number, id: number, cvText?: string, cvFilename?: string) {
+  async uploadCv(userId: number, id: number, cvText?: string, cvFilename?: string, cvOriginalFilename?: string) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
 
     if (!currentEntry) {
@@ -135,18 +135,20 @@ export const jobBoardEntriesService = {
         data: {
           cvText,
           cvFilename: null,
+          cvOriginalFilename: null,
         },
       });
     } else if (cvFilename) {
       if (cvFilename.split(".").pop() !== "pdf") {
         throw createHttpError(400, "Please upload a valid PDF file");
       }
-      
+
       return await prisma.jobBoardEntry.update({
         where: { id },
         data: {
           cvText: null,
           cvFilename,
+          cvOriginalFilename: cvOriginalFilename ?? null,
         },
       });
     } else {
@@ -155,12 +157,13 @@ export const jobBoardEntriesService = {
         data: {
           cvText: null,
           cvFilename: null,
+          cvOriginalFilename: null,
         },
       });
     }
   },
 
-  async uploadCoverLetter(userId: number, id: number, coverLetterText?: string, coverLetterFilename?: string) {
+  async uploadCoverLetter(userId: number, id: number, coverLetterText?: string, coverLetterFilename?: string, coverLetterOriginalFilename?: string) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
 
     if (!currentEntry) {
@@ -177,6 +180,7 @@ export const jobBoardEntriesService = {
         data: {
           coverLetterText,
           coverLetterFilename: null,
+          coverLetterOriginalFilename: null,
         },
       });
     } else if (coverLetterFilename) {
@@ -189,6 +193,7 @@ export const jobBoardEntriesService = {
         data: {
           coverLetterText: null,
           coverLetterFilename,
+          coverLetterOriginalFilename: coverLetterOriginalFilename ?? null,
         },
       });
     } else {
@@ -197,6 +202,7 @@ export const jobBoardEntriesService = {
         data: {
           coverLetterText: null,
           coverLetterFilename: null,
+          coverLetterOriginalFilename: null,
         },
       });
     }
