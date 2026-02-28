@@ -21,6 +21,7 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+      target: dev
     ports:
       - "3000:3000"
     volumes:
@@ -39,6 +40,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://postgres:password@db:5432/candido
     ports:
       - "8000:5000"
     environment:
@@ -56,6 +59,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://postgres:password@db:5432/candido
     ports:
       - "5555:5555"
     environment:
