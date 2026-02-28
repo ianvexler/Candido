@@ -17,6 +17,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           host_key_checking: false
+          command_timeout: 30m
           script: |
             cd ${{ secrets.EC2_APP_PATH }}
             if ! command -v docker-compose &> /dev/null; then
