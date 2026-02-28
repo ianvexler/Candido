@@ -12,13 +12,10 @@ export function useBoardFilters(
   const [showRejected, setShowRejected] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
-  const debouncedSetSearch = useMemo(
-    () =>
-      debounce((value: string) => {
-        setSearch(value);
-      }, 300),
-    []
-  );
+  const debouncedSetSearch = useMemo(() =>
+    debounce(
+      ((value: string) => setSearch(value)) as (...args: unknown[]) => unknown, 300
+    ), []);
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

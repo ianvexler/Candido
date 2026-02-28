@@ -39,7 +39,7 @@ const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
     }).finally(() => {
       setLoadingFile(false);
     });
-  }, [initialDocKey, initialDocDisplayName]);
+  }, [initialDocKey, initialDocDisplayName, type]);
 
   const handleCreate = () => {
     setDocText('');
