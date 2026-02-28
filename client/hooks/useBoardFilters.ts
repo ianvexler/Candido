@@ -1,30 +1,28 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, ChangeEvent } from "react";
 import debounce from "lodash.debounce";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 
-export function useBoardFilters(
+export const useBoardFilters = (
   jobBoardEntries: JobBoardEntry[],
   setJobBoardEntries: React.Dispatch<React.SetStateAction<JobBoardEntry[]>>
-) {
+) => {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [showRejected, setShowRejected] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
 
-  const debouncedSetSearch = useMemo(() =>
-    debounce(
+  const debouncedSetSearch = useMemo(() => debounce(
       ((value: string) => setSearch(value)) as (...args: unknown[]) => unknown, 300
-    ), []);
+  ), []);
 
   const handleSearchChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setSearchInput(value);
+
       debouncedSetSearch(value);
-    },
-    [debouncedSetSearch]
-  );
+  }, [debouncedSetSearch]);
 
   const handleTagToggle = useCallback((tagName: string, checked: boolean) => {
     setTags((prev) =>
