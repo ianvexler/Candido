@@ -17,7 +17,8 @@ interface EntryDocCardProps {
 }
 const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
   const initialDocText = type === "CV" ? entry.cvText : entry.coverLetterText;
-  const initialDocFile = type === "CV" ? entry.cvFilename : entry.coverLetterFilename;
+  const initialDocKey = type === "CV" ? entry.cvKey : entry.coverLetterKey;
+  const initialDocDisplayName = type === "CV" ? entry.cvFilename : entry.coverLetterFilename;
 
   const [docText, setDocText] = useState<string | undefined>(initialDocText);
   const [docFile, setDocFile] = useState<File | undefined>();
@@ -28,16 +29,17 @@ const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
   const fileInput = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
-    if (initialDocFile) {
-      setLoadingFile(true);
-
-      getFileUpload(initialDocFile).then((response) => {
-        setDocFile(new File([response], initialDocFile));
-      }).finally(() => {
-        setLoadingFile(false);
-      });
+    if (!initialDocKey) {
+      return;
     }
-  }, [initialDocFile]);
+
+    setLoadingFile(true);
+    getFileUpload(initialDocKey).then((response) => {
+      setDocFile(new File([response], initialDocDisplayName ?? (type === "CV" ? "cv.pdf" : "cover-letter.pdf")));
+    }).finally(() => {
+      setLoadingFile(false);
+    });
+  }, [initialDocKey, initialDocDisplayName]);
 
   const handleCreate = () => {
     setDocText('');
@@ -60,21 +62,23 @@ const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
     try {
       if (type === "CV") {
         const response = await uploadCVJobBoardEntry(entry.id, docText, docFile);
-        const filename = response.jobBoardEntry.cvFilename ?? docFile?.name;
+        const updated = response.jobBoardEntry;
         
         onUpdateEntry({
           ...entry,
-          cvText: docText,
-          cvFilename: filename,
+          cvText: updated.cvText,
+          cvKey: updated.cvKey,
+          cvFilename: updated.cvFilename,
         });
       } else {
         const response = await uploadCoverLetterJobBoardEntry(entry.id, docText, docFile);
-        const filename = response.jobBoardEntry.coverLetterFilename ?? docFile?.name;
+        const updated = response.jobBoardEntry;
         
         onUpdateEntry({
           ...entry,
-          coverLetterText: docText,
-          coverLetterFilename: filename,
+          coverLetterText: updated.coverLetterText,
+          coverLetterKey: updated.coverLetterKey,
+          coverLetterFilename: updated.coverLetterFilename,
         });
       }
 

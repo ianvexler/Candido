@@ -97,12 +97,8 @@ const SheetPage = () => {
   const handleCvUpload = useCallback(
     async (entry: JobBoardEntry, file: File) => {
       try {
-        await uploadCVJobBoardEntry(entry.id, undefined, file);
-        const updated = {
-          ...entry,
-          cvFilename: file.name,
-          cvOriginalFilename: file.name,
-        };
+        const response = await uploadCVJobBoardEntry(entry.id, undefined, file);
+        const updated = { ...entry, ...response.jobBoardEntry };
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
         );
@@ -119,12 +115,8 @@ const SheetPage = () => {
   const handleCoverLetterUpload = useCallback(
     async (entry: JobBoardEntry, file: File) => {
       try {
-        await uploadCoverLetterJobBoardEntry(entry.id, undefined, file);
-        const updated = {
-          ...entry,
-          coverLetterFilename: file.name,
-          coverLetterOriginalFilename: file.name,
-        };
+        const response = await uploadCoverLetterJobBoardEntry(entry.id, undefined, file);
+        const updated = { ...entry, ...response.jobBoardEntry };
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
         );
@@ -139,14 +131,14 @@ const SheetPage = () => {
   );
 
   const handleCvDownload = useCallback(async (entry: JobBoardEntry) => {
-    const filename = entry.cvFilename;
-    if (!filename) return;
+    if (!entry.cvKey) return;
     try {
-      const blob = await getFileUpload(filename);
+      const blob = await getFileUpload(entry.cvKey);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+
       a.href = url;
-      a.download = entry.cvOriginalFilename ?? filename;
+      a.download = entry.cvFilename ?? "cv.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -156,14 +148,14 @@ const SheetPage = () => {
   }, []);
 
   const handleCoverLetterDownload = useCallback(async (entry: JobBoardEntry) => {
-    const filename = entry.coverLetterFilename;
-    if (!filename) return;
+    if (!entry.coverLetterKey) return;
     try {
-      const blob = await getFileUpload(filename);
+      const blob = await getFileUpload(entry.coverLetterKey);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+
       a.href = url;
-      a.download = entry.coverLetterOriginalFilename ?? filename;
+      a.download = entry.coverLetterFilename ?? "cover-letter.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {

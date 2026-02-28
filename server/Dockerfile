@@ -11,6 +11,7 @@ COPY prisma.config.ts ./
 
 ENV DATABASE_URL="postgresql://localhost:5432/dummy"
 RUN npm install
+
 # Copy the rest of the application code
 COPY . .
 # Expose the port your Node.js app listens on

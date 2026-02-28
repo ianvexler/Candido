@@ -69,8 +69,7 @@ export const uploadCv = async (req: Request, res: Response) => {
     userId,
     idNumber,
     cvText,
-    cvFile?.filename,
-    cvFile?.originalname
+    cvFile
   );
 
   return res.status(200).json({ jobBoardEntry });
@@ -91,8 +90,7 @@ export const uploadCoverLetter = async (req: Request, res: Response) => {
     userId,
     idNumber,
     coverLetterText,
-    coverLetterFile?.filename,
-    coverLetterFile?.originalname
+    coverLetterFile
   );
 
   return res.status(200).json({ jobBoardEntry });

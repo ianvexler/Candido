@@ -1,6 +1,7 @@
 import { JobStatus } from "@/generated/prisma/enums.js";
 import { prisma } from "../lib/prisma.js";
 import createHttpError from "http-errors";
+import storageService from "./storageServices.js";
 
 export const jobBoardEntriesService = {
   async getJobBoardEntries(userId: number) {
@@ -137,7 +138,7 @@ export const jobBoardEntriesService = {
     return await prisma.jobBoardEntry.delete({ where: { id }});
   },
 
-  async uploadCv(userId: number, id: number, cvText?: string, cvFilename?: string, cvOriginalFilename?: string) {
+  async uploadCv(userId: number, id: number, cvText?: string, cvFile?: Express.Multer.File) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
 
     if (!currentEntry) {
@@ -154,20 +155,26 @@ export const jobBoardEntriesService = {
         data: {
           cvText,
           cvFilename: null,
-          cvOriginalFilename: null,
+          cvKey: null,
         },
       });
-    } else if (cvFilename) {
-      if (cvFilename.split(".").pop() !== "pdf") {
+    } else if (cvFile) {
+      const ext = cvFile.originalname?.split(".").pop() ?? "pdf";
+      const key = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${ext}`;
+      const cvOriginalFilename = cvFile.originalname;
+
+      if (ext !== "pdf") {
         throw createHttpError(400, "Please upload a valid PDF file");
       }
+
+      await storageService.upload(key, cvFile.buffer);
 
       return await prisma.jobBoardEntry.update({
         where: { id },
         data: {
           cvText: null,
-          cvFilename,
-          cvOriginalFilename: cvOriginalFilename ?? null,
+          cvKey: key,
+          cvFilename: cvOriginalFilename ?? null,
         },
       });
     } else {
@@ -176,13 +183,13 @@ export const jobBoardEntriesService = {
         data: {
           cvText: null,
           cvFilename: null,
-          cvOriginalFilename: null,
+          cvKey: null,
         },
       });
     }
   },
 
-  async uploadCoverLetter(userId: number, id: number, coverLetterText?: string, coverLetterFilename?: string, coverLetterOriginalFilename?: string) {
+  async uploadCoverLetter(userId: number, id: number, coverLetterText?: string, coverLetterFile?: Express.Multer.File) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
 
     if (!currentEntry) {
@@ -199,20 +206,26 @@ export const jobBoardEntriesService = {
         data: {
           coverLetterText,
           coverLetterFilename: null,
-          coverLetterOriginalFilename: null,
+          coverLetterKey: null,
         },
       });
-    } else if (coverLetterFilename) {
-      if (coverLetterFilename.split(".").pop() !== "pdf") {
+    } else if (coverLetterFile) {
+      const ext = coverLetterFile.originalname?.split(".").pop() ?? "pdf";
+      const key = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${ext}`;
+      const coverLetterOriginalFilename = coverLetterFile.originalname;
+
+      if (ext !== "pdf") {
         throw createHttpError(400, "Please upload a valid PDF file");
       }
+
+      await storageService.upload(key, coverLetterFile.buffer);
 
       return await prisma.jobBoardEntry.update({
         where: { id },
         data: {
           coverLetterText: null,
-          coverLetterFilename,
-          coverLetterOriginalFilename: coverLetterOriginalFilename ?? null,
+          coverLetterKey: key,
+          coverLetterFilename: coverLetterOriginalFilename ?? null,
         },
       });
     } else {
@@ -221,7 +234,7 @@ export const jobBoardEntriesService = {
         data: {
           coverLetterText: null,
           coverLetterFilename: null,
-          coverLetterOriginalFilename: null,
+          coverLetterKey: null,
         },
       });
     }

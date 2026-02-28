@@ -167,13 +167,13 @@ const SheetTable = ({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="xs" className="h-7 text-xs gap-1">
-                        {entry.cvFilename || entry.cvOriginalFilename ? "CV" : "CV"}
+                        CV
                         <ChevronDownIcon className="size-3" />
                       </Button>
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="start" className="min-w-[120px]">
-                      {(entry.cvFilename || entry.cvOriginalFilename) ? (
+                      {entry.cvKey ? (
                         <>
                           <DropdownMenuItem
                             className="cursor-pointer"
@@ -211,12 +211,12 @@ const SheetTable = ({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="xs" className="h-7 text-xs gap-1">
-                        {entry.coverLetterFilename || entry.coverLetterOriginalFilename ? "Cover" : "Cover"}
+                        Cover
                         <ChevronDownIcon className="size-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="min-w-[120px]">
-                      {(entry.coverLetterFilename || entry.coverLetterOriginalFilename) ? (
+                      {entry.coverLetterKey ? (
                         <>
                           <DropdownMenuItem
                             className="cursor-pointer"

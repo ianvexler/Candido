@@ -46,11 +46,11 @@ export type JobBoardEntry = {
   updatedAt: Date;
   jobBoardTags: JobBoardTag[];
   cvText?: string;
+  cvKey?: string;
   cvFilename?: string;
-  cvOriginalFilename?: string;
   coverLetterText?: string;
+  coverLetterKey?: string;
   coverLetterFilename?: string;
-  coverLetterOriginalFilename?: string;
 }
 
 export type JobBoardTag = {

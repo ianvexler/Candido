@@ -11,10 +11,8 @@ interface SheetFileInputsProps {
 }
 
 const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
-  const initialCVFilename = entry.cvFilename ?? null;
-  const initialCVDisplayName = entry.cvOriginalFilename ?? entry.cvFilename ?? null;
-  const initialCoverLetterFilename = entry.coverLetterFilename ?? null;
-  const initialCoverLetterDisplayName = entry.coverLetterOriginalFilename ?? entry.coverLetterFilename ?? null;
+  const initialCVKey = entry.cvKey ?? null;
+  const initialCoverLetterKey = entry.coverLetterKey ?? null;
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
@@ -23,24 +21,24 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
   const coverLetterFileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!initialCVFilename) {
+    if (!initialCVKey) {
       return;
     }
 
-    getFileUpload(initialCVFilename).then((response) => {
-      setCvFile(new File([response], initialCVDisplayName ?? initialCVFilename));
+    getFileUpload(initialCVKey).then((response) => {
+      setCvFile(new File([response], entry.cvFilename ?? "cv.pdf"));
     });
-  }, [initialCVFilename, initialCVDisplayName]);
+  }, [initialCVKey, entry.cvFilename]);
 
   useEffect(() => {
-    if (!initialCoverLetterFilename) {
+    if (!initialCoverLetterKey) {
       return;
     }
 
-    getFileUpload(initialCoverLetterFilename).then((response) => {
-      setCoverLetterFile(new File([response], initialCoverLetterDisplayName ?? initialCoverLetterFilename));
+    getFileUpload(initialCoverLetterKey).then((response) => {
+      setCoverLetterFile(new File([response], entry.coverLetterFilename ?? "cover-letter.pdf"));
     });
-  }, [initialCoverLetterFilename, initialCoverLetterDisplayName]);
+  }, [initialCoverLetterKey, entry.coverLetterFilename]);
 
   const handleCvUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
