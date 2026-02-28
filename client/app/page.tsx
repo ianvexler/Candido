@@ -1,132 +1,162 @@
 "use client";
 
-import PageContainer from "@/components/common/PageContainer";
-import Title from "@/components/common/Title";
-import Description from "@/components/common/Description";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card";
-import Logo from "@/lib/images/MainLogo.png";
+import { useEffect } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { BarChart3Icon, TrendingUpIcon, BriefcaseIcon, GitBranchIcon, TagIcon, InfoIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import Logo from "@/lib/images/MainLogo.png";
+import BoardScreenshot from "@/lib/images/BoardScreenshot.png";
+import SheetScreenshot from "@/lib/images/SheetScreenshot.png";
+import {
+  KanbanIcon,
+  LayoutGridIcon,
+} from "lucide-react";
 
-const HomePage = () => {
+const features = [
+  {
+    icon: KanbanIcon,
+    title: "Kanban Board",
+    description:
+      "Visualize your job applications in a drag-and-drop board. Move applications between stages—from applied to offered—with a single swipe.",
+    screenshot: BoardScreenshot,
+  },
+  {
+    icon: LayoutGridIcon,
+    title: "Table View",
+    description:
+      "See all your applications in a sortable, filterable table. Search by company, filter by status, and manage tags to stay organized.",
+    screenshot: SheetScreenshot,
+  },
+  // {
+  //   icon: BarChart3Icon,
+  //   title: "Dashboard Insights",
+  //   description:
+  //     "Track your application metrics at a glance. Response rates, applications per week, and status breakdowns help you understand your progress.",
+  //   screenshotSlot: "dashboard",
+  // },
+  // {
+  //   icon: FileTextIcon,
+  //   title: "Rich Job Entries",
+  //   description:
+  //     "Store CVs, cover letters, and detailed descriptions for each application. Everything in one place when you need it.",
+  //   screenshotSlot: "entry",
+  // },
+];
+
+const LandingPage = () => {
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      redirect("/dashboard");
+    }
+  }, [isAuthenticated]);
+
   return (
-    <PageContainer>
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div>
-            <Title>Dashboard</Title>
-            <Description className="mt-1">Insights on your job applications</Description>
+    <div className="flex flex-col min-h-screen pt-14">
+      <section className="relative overflow-hidden border-b border-border bg-linear-to-b from-muted/30 to-background">
+        <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24 text-center">
+          <div className="mx-auto inline-flex rounded-xl bg-candido-black px-5 py-4">
+            <Image
+              src={Logo}
+              alt="Candido"
+              height={56}
+              className="rounded"
+            />
           </div>
-          <div className="flex items-center justify-center shrink-0 bg-candido-black rounded-lg px-6 py-4">
-            <Image src={Logo} alt="Candido" height={40} className="rounded" />
+
+          <h1 className="mt-8 text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+            Track your job applications
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Candido helps you stay organized through your job search. Manage
+            applications on a Kanban board, view them in a table, and keep CVs,
+            cover letters, and notes in one place.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Button asChild size="lg">
+              <Link href="/register">Get started</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">Sign in</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="flex-1 bg-muted/40">
+        <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+          <h2 className="text-center text-2xl font-semibold text-foreground sm:text-3xl">
+            Everything you need for your job search
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground">
+            From first application to final offer. Candido keeps you on track.
+          </p>
+
+          <div className="mt-16 space-y-24">
+            {features.map((feature, idx) => {
+              const Icon = feature.icon;
+              const isReversed = idx % 2 === 1;
+              return (
+                <div
+                  key={feature.title}
+                  className={`flex flex-col gap-8 md:flex-row md:items-center md:gap-12 ${
+                    isReversed ? "md:flex-row-reverse" : ""
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-lg bg-candido-black p-2.5 text-white">
+                        <Icon className="size-5" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-foreground">
+                        {feature.title}
+                      </h3>
+                    </div>
+                    <p className="mt-4 text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+
+                  <div className="min-w-0 flex-1 md:flex-[1.4]">
+                    <div className="relative aspect-4/3 w-full rounded-xl overflow-hidden border border-border shadow-lg md:aspect-video">
+                      <Image
+                        src={feature.screenshot}
+                        alt={feature.title}
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 768px) 100vw, 60vw"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 justify-center rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 text-center text-sm text-muted-foreground">
-          <InfoIcon className="size-4 text-muted-foreground" />
-          Preview with sample data · Real insights coming soon
+        <div className="mx-auto max-w-4xl px-6 text-center mb-20">
+          <h2 className="text-xl font-semibold text-foreground">
+            Ready to organize your job search?
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            Create an account and start tracking your applications today.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <Button asChild size="lg">
+              <Link href="/register">Create account</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">Sign in</Link>
+            </Button>
+          </div>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card className="p-3 min-h-44">
-            <CardHeader className="flex flex-row items-center gap-2 mt-2">
-              <BriefcaseIcon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">Applications this week</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">12</p>
-              <p className="text-xs text-muted-foreground mt-1">+3 from last week</p>
-            </CardContent>
-          </Card>
-
-          <Card className="p-3 min-h-44">
-            <CardHeader className="flex flex-row items-center gap-2 mt-2">
-              <TrendingUpIcon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">Response rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">24%</p>
-              <p className="text-xs text-muted-foreground mt-1">8 of 33 applications</p>
-            </CardContent>
-          </Card>
-
-          <Card className="p-3 min-h-44">
-            <CardHeader className="flex flex-row items-center gap-2 mt-2">
-              <GitBranchIcon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">Active</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">5</p>
-              <p className="text-xs text-muted-foreground mt-1">Awaiting response or in interview</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="p-3 min-h-64">
-            <CardHeader className="flex flex-row items-center gap-2 mt-2">
-              <BarChart3Icon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">Applications by status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Offered</span>
-                  <span>5</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Accepted</span>
-                  <span>2</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Rejected</span>
-                  <span>18</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Archived</span>
-                  <span>8</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="p-3 min-h-64">
-            <CardHeader className="flex flex-row items-center gap-2 mt-2">
-              <TagIcon className="size-5 text-muted-foreground" />
-              <CardTitle className="text-base">Recent tag trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="mb-3">Most used tags across your applications</CardDescription>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span>Remote</span>
-                  <span className="text-muted-foreground">8 applications</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Frontend</span>
-                  <span className="text-muted-foreground">6 applications</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Senior</span>
-                  <span className="text-muted-foreground">5 applications</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>React</span>
-                  <span className="text-muted-foreground">4 applications</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </PageContainer>
+      </section>
+    </div>
   );
 };
 
-export default HomePage;
+export default LandingPage;

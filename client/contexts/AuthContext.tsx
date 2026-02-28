@@ -30,7 +30,7 @@ export const useAuth = () => {
   return context;
 };
 
-const permittedRoutes = ['/login', '/register'];
+const permittedRoutes = ['/', '/login', '/register'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();

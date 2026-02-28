@@ -24,7 +24,7 @@ import { PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
-import EditJobSheet from "@/components/jobBoard/EditJobSheet";
+import JobEditPanel from "@/components/jobBoard/JobEditPanel";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
 
 const BoardPage = () => {
@@ -351,7 +351,7 @@ const BoardPage = () => {
 
       <Sheet open={!!selectedJob} onOpenChange={() => setSelectedJob(undefined)}>
         {selectedJob && (
-          <EditJobSheet 
+          <JobEditPanel 
             entry={selectedJob}
             allEntries={jobBoardEntries}
             onClose={() => setSelectedJob(undefined)}

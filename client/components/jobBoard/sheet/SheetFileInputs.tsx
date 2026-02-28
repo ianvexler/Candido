@@ -4,7 +4,7 @@ import { getFileUpload } from "@/api/resources/uploads/getFileUpload";
 import toast from "react-hot-toast";
 import { uploadCVJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCVJobBoardEntry";
 import { uploadCoverLetterJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCoverLetterJobBoardEntry";
-import FileAttachment from "./FileAttachment";
+import FileAttachment from "../FileAttachment";
 
 interface SheetFileInputsProps {
   entry: JobBoardEntry;

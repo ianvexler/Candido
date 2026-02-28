@@ -3,6 +3,7 @@ import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ReactNode } from "react";
 import Navbar from "@/components/layout/Navbar";
+import MainContent from "@/components/layout/MainContent";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
 import Footer from "@/components/layout/footer";
@@ -21,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Candido",
-  description: "A Next.js app with Express API",
+  description: "Track your job applications",
 };
 
 interface RootLayoutProps {
@@ -37,12 +38,12 @@ const RootLayout = ({ children }: RootLayoutProps) => {
             <div className="flex min-h-screen flex-1">
               <Navbar />
 
-              <div className="flex min-h-screen flex-1 flex-col overflow-y-auto pl-0 md:pl-18 pt-14 md:pt-0 min-w-0">
+              <MainContent>
                 <main className="flex-1 flex flex-col min-h-0">
                   <div className="flex-1 min-h-0 flex flex-col">{children}</div>
                 </main>
                 <Footer />
-              </div>
+              </MainContent>
             </div>
           </TooltipProvider>
           

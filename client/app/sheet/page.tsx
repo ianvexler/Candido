@@ -9,14 +9,14 @@ import Description from "@/components/common/Description";
 import Title from "@/components/common/Title";
 import AddJobModal from "@/components/jobBoard/AddJobModal";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
-import SheetTable from "@/components/jobBoard/SheetTable";
+import SheetTable from "@/components/jobBoard/sheet/SheetTable";
 import { useBoardFilters } from "@/hooks/useBoardFilters";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
-import EditJobSheet from "@/components/jobBoard/EditJobSheet";
+import JobEditPanel from "@/components/jobBoard/JobEditPanel";
 
 const SheetPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
@@ -262,7 +262,7 @@ const SheetPage = () => {
 
       <Sheet open={!!selectedJob} onOpenChange={() => setSelectedJob(undefined)}>
         {selectedJob && (
-          <EditJobSheet
+          <JobEditPanel
             entry={selectedJob}
             allEntries={jobBoardEntries}
             onClose={() => setSelectedJob(undefined)}

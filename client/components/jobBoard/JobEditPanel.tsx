@@ -16,17 +16,17 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import StarterKit from '@tiptap/starter-kit'
 import { redirect } from "next/navigation";
 import ConfirmationModal from "../common/ConfirmationModal";
-import SheetFileInputs from "./SheetFileInputs";
+import SheetFileInputs from "./sheet/SheetFileInputs";
 import TagsInput from "./TagsInput";
 
-interface EditJobSheetProps {
+interface JobEditPanelProps {
   entry: JobBoardEntry;
   allEntries: JobBoardEntry[];
   onClose: () => void;
   onUpdateJob: (job: JobBoardEntry) => void;
 }
 
-const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetProps) => {
+const JobEditPanel = ({ entry, allEntries, onClose, onUpdateJob }: JobEditPanelProps) => {
   const [title, setTitle] = useState<string>(entry.title);
   const [company, setCompany] = useState<string>(entry.company);
   const [location, setLocation] = useState<string>(entry.location ?? "");
@@ -375,4 +375,4 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
   );
 };
 
-export default EditJobSheet;
+export default JobEditPanel;

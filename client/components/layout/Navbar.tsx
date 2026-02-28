@@ -4,11 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
-import { HomeIcon, KanbanIcon, LogOutIcon, SheetIcon } from "lucide-react";
+import { HomeIcon, KanbanIcon, LogOutIcon, SheetIcon, UserIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 const navLinks = [
-  { href: "/", icon: HomeIcon, label: "Home" },
+  { href: "/dashboard", icon: HomeIcon, label: "Dashboard" },
   { href: "/board", icon: KanbanIcon, label: "Board" },
   { href: "/sheet", icon: SheetIcon, label: "Sheet" },
 ];
@@ -18,6 +19,31 @@ const Navbar = () => {
   const pathname = usePathname();
 
   if (!isAuthenticated) {
+    if (pathname === "/") {
+      return (
+        <header className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between border-b border-white/10 bg-candido-black px-4 py-4 md:px-6">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src={Logo} alt="Candido" width={35} height={40} className="rounded" />
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Button
+              className="bg-white text-black hover:bg-white/90"
+              asChild
+            >
+              <Link href="/login">Sign in</Link>
+            </Button>
+            <Button
+              className="bg-white text-black hover:bg-white/90"
+              asChild
+            >
+              <Link href="/register">Get started</Link>
+            </Button>
+          </div>
+        </header>
+      );
+    }
+
     return null;
   }
 
@@ -28,7 +54,7 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Desktop: left sidebar */}
+      {/* Desktop */}
       <aside className="hidden md:flex fixed left-0 top-0 z-10 h-screen w-18 shrink-0 flex-col items-center border-r border-border bg-candido-black py-4">
         <Link href="/" className="mb-6 my-3">
           <Image src={Logo} alt="Candido" width={34} height={36} className="rounded" />
@@ -48,17 +74,23 @@ const Navbar = () => {
           ))}
         </nav>
 
-        <button
-          onClick={() => handleLogout()}
-          className="cursor-pointer flex size-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
-          aria-label="Logout"
-          title="Logout"
-        >
-          <LogOutIcon className="size-5" />
-        </button>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <Link href="/profile" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/profile")}`}>
+            <UserIcon className="size-5" />
+          </Link>
+
+          <button
+            onClick={() => handleLogout()}
+            className="cursor-pointer flex size-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Logout"
+            title="Logout"
+          >
+            <LogOutIcon className="size-5" />
+          </button>
+        </div>
       </aside>
 
-      {/* Mobile: top nav */}
+      {/* Mobile */}
       <nav className="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center justify-around border-b border-border bg-candido-black py-2">
         {navLinks.map(({ href, icon: Icon, label }) => (
           <Link
