@@ -25,6 +25,5 @@ services:
       - "8000:8000"
     environment:
       NODE_ENV: production
-      PORT: 8000
     command: sh -c "npx prisma migrate deploy && npm start"
     restart: unless-stopped
