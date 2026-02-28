@@ -8,19 +8,19 @@ import { Input } from "../../ui/Input";
 import { Label } from "../../ui/Label";
 import { Button } from "../../ui/Button";
 
-interface LinkFormContentProps {
-  initialState: LinkModalState;
-  onSubmit: (text: string, url: string, from?: number, to?: number) => void;
-  onClose: () => void;
-  onRemove?: (from?: number, to?: number) => void;
-}
-
-interface LinkModalState {
+export interface LinkModalState {
   text: string;
   url: string;
   isEditing: boolean;
   from?: number;
   to?: number;
+}
+
+interface LinkFormContentProps {
+  initialState: LinkModalState;
+  onSubmit: (text: string, url: string, from?: number, to?: number) => void;
+  onClose: () => void;
+  onRemove?: (from?: number, to?: number) => void;
 }
 
 const LinkFormContent = ({

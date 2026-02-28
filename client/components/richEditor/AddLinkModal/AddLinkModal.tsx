@@ -1,8 +1,7 @@
 "use client";
 
 import { Dialog } from "radix-ui";
-import LinkFormContent from "./LinkFormContent";
-import type { LinkModalState } from "./types";
+import LinkFormContent, { type LinkModalState } from "./LinkFormContent";
 
 interface AddLinkModalProps {
   isOpen: boolean;
@@ -52,4 +51,3 @@ const AddLinkModal = ({
 };
 
 export default AddLinkModal;
-export type { LinkModalState } from "./types";

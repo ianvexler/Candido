@@ -18,7 +18,8 @@ import {
   Undo2,
   Redo2,
 } from 'lucide-react';
-import AddLinkModal, { type LinkModalState } from '../AddLinkModal/AddLinkModal';
+import AddLinkModal from '../AddLinkModal/AddLinkModal';
+import type { LinkModalState } from '../AddLinkModal/LinkFormContent';
 
 interface SimpleMenuBarProps {
   editor: Editor | null;
