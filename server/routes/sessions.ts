@@ -7,6 +7,7 @@ const router = Router();
 // Public routes
 router.post("/", sessionsController.login);
 router.post("/register", sessionsController.register);
+router.get("/verify", sessionsController.verifyEmail);
 
 // Protected routes
 router.delete("/", requireAuth, sessionsController.logout);

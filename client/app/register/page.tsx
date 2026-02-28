@@ -2,6 +2,7 @@
 
 import { SubmitEvent, useEffect, useState } from "react";
 import { redirect, useSearchParams } from "next/navigation";
+import { AxiosError } from "axios";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -28,6 +29,8 @@ const RegisterPage = () => {
 
   const from = searchParams.get("from") ?? "/";
 
+  const [registered, setRegistered] = useState(false);
+
   useEffect(() => {
     if (isAuthenticated) {
       redirect(from);
@@ -40,9 +43,17 @@ const RegisterPage = () => {
 
     try {
       await handleRegister(email, password, name);
-      redirect(from);
+      setRegistered(true);
+      toast.success("Check your email to verify your account");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Registration failed");
+      const message =
+        err instanceof AxiosError && err.response?.data?.error
+          ? (err.response.data.error as string)
+          : err instanceof Error
+            ? err.message
+            : "Registration failed";
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -63,71 +74,93 @@ const RegisterPage = () => {
 
           <CardContent className="space-y-4 mt-6 mb-6 px-6">
             <div className="mb-5">
-              <CardTitle className="text-lg">Create an account</CardTitle>
-              <CardDescription className="mt-1">Enter your details to get started</CardDescription>
+              <CardTitle className="text-lg">
+                {registered ? "Check your email" : "Create an account"}
+              </CardTitle>
+
+              <CardDescription className="mt-1">
+                {registered
+                  ? "We sent a verification link to your email. Click the link to verify your account, then sign in."
+                  : "Enter your details to get started"}
+              </CardDescription>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
+            {!registered && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3 px-6 pb-6 mt-8">
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Creating account..." : "Create account"}
-            </Button>
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">or</span>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={loading}
-              className="w-full"
-              onClick={() => redirect(`/login?from=${from}`)}
-            >
-              Sign in
-            </Button>
+            {!registered ? (
+              <>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? "Creating account..." : "Create account"}
+                </Button>
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={loading}
+                  className="w-full"
+                  onClick={() => redirect(`/login?from=${from}`)}
+                >
+                  Sign in
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="button"
+                className="w-full"
+                onClick={() => redirect(`/login?from=${from}`)}
+              >
+                Go to sign in
+              </Button>
+            )}
           </CardFooter>
         </form>
       </Card>

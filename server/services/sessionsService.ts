@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { addDays } from "date-fns";
 import createHttpError from "http-errors";
 import { prisma } from "../lib/prisma.js";
+import { sendVerificationEmail } from "../lib/email.js";
 
 export const sessionsService = {
   async authenticate(email: string, password: string) {
@@ -13,6 +14,10 @@ export const sessionsService = {
 
     if (!user.password) {
       throw createHttpError(401, "User has no password");
+    }
+
+    if (!user.verified) {
+      throw createHttpError(403, "Please verify your email before signing in");
     }
 
     const ok = await bcrypt.compare(password, user.password);
@@ -55,15 +60,48 @@ export const sessionsService = {
       throw createHttpError(400, "User already exists");
     }
 
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpiresAt = addDays(new Date(), 1);
+
     const user = await prisma.user.create({
       data: {
         email,
         password: await bcrypt.hash(password, 10),
         name,
+        verificationToken,
+        verificationExpiresAt,
       },
     });
-    
-    const session = await this.createSession(user.id);
-    return { user, session };
-  }
+
+    const clientUrl = process.env["CORS_ORIGIN"] ?? "http://localhost:3000";
+    const verificationUrl = `${clientUrl}/verify?token=${verificationToken}`;
+    await sendVerificationEmail(email, name, verificationUrl);
+
+    return { user };
+  },
+
+  async verifyEmail(token: string) {
+    const user = await prisma.user.findFirst({
+      where: { verificationToken: token },
+    });
+
+    if (!user) {
+      throw createHttpError(400, "Invalid or expired verification link");
+    }
+
+    if (user.verificationExpiresAt && user.verificationExpiresAt < new Date()) {
+      throw createHttpError(400, "Verification link has expired");
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verified: true,
+        verificationToken: null,
+        verificationExpiresAt: null,
+      },
+    });
+
+    return user;
+  },
 };

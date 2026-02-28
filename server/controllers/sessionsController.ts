@@ -41,19 +41,28 @@ export const register = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Email, password and name are required" });
   }
 
-  const { user, session } = await sessionsService.register(email, password, name);
-  res.cookie(AUTH_TOKEN, session.token, {
-    httpOnly: true,
-    secure: process.env["NODE_ENV"] === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30 * 1000,
-    path: "/",
-  });
+  const { user } = await sessionsService.register(email, password, name);
+  const { password: _p, verificationToken: _vt, verificationExpiresAt: _ve, ...safeUser } = user;
 
   return res.status(201).json({
-    user: user,
-    token: session.token,
-    expiresAt: session.expiresAt,
+    user: safeUser,
+    message: "Please check your email to verify your account",
+  });
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "Verification token is required" });
+  }
+
+  const user = await sessionsService.verifyEmail(token);
+  const { password: _p, verificationToken: _vt, verificationExpiresAt: _ve, ...safeUser } = user;
+
+  return res.status(200).json({
+    user: safeUser,
+    message: "Email verified successfully",
   });
 };
 

@@ -30,7 +30,7 @@ export const useAuth = () => {
   return context;
 };
 
-const permittedRoutes = ['/', '/login', '/register'];
+const permittedRoutes = ['/', '/login', '/register', '/verify'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
@@ -55,8 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleRegister = async (email: string, password: string, name: string) => {
-    const response = await register(email, password, name);
-    setUser(response.user);
+    await register(email, password, name);
   };
 
   const handleUnauthorized = useCallback(() => {

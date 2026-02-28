@@ -1,13 +1,8 @@
-# Copy server/.env.example to server/.env and fill in production values.
-# Run: docker compose --env-file server/.env -f docker-compose.prod.yml up -d --build
+# Images are built in CI and pushed to ghcr.io. Run: docker-compose pull && docker-compose up -d
 
 services:
   client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-client:latest
     ports:
       - "3000:3000"
     environment:
@@ -15,11 +10,7 @@ services:
     restart: unless-stopped
 
   server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-      args:
-        DATABASE_URL: ${DATABASE_URL:-postgresql://placeholder:placeholder@localhost:5432/placeholder}
+    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-server:latest
     env_file: server/.env
     ports:
       - "8000:8000"

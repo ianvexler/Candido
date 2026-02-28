@@ -2,6 +2,7 @@
 
 import { SubmitEvent, useEffect, useState } from "react";
 import { redirect, useSearchParams } from "next/navigation";
+import { AxiosError } from "axios";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -23,7 +24,6 @@ const LoginPage = () => {
   const { handleLogin, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const from = searchParams.get("from") ?? "/";
@@ -36,15 +36,21 @@ const LoginPage = () => {
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    setError(null);
+
     setLoading(true);
 
     try {
       await handleLogin(email, password);
       redirect(from);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
-      toast.error(error);
+      const message =
+        err instanceof AxiosError && err.response?.data?.error
+          ? (err.response.data.error as string)
+          : err instanceof Error
+            ? err.message
+            : "Login failed";
+
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -8,13 +8,16 @@ datasource db {
 }
 
 model User {
-  id              Int             @id @default(autoincrement())
-  email           String          @unique
-  name            String?
-  password        String?
-  jobBoardEntries JobBoardEntry[]
-  jobBoardTags    JobBoardTag[]
-  sessions        Session[]
+  id                    Int       @id @default(autoincrement())
+  email                 String    @unique
+  name                  String?
+  password              String?
+  verified              Boolean   @default(false)
+  verificationToken     String?
+  verificationExpiresAt DateTime?
+  jobBoardEntries       JobBoardEntry[]
+  jobBoardTags          JobBoardTag[]
+  sessions              Session[]
 }
 
 model Session {
