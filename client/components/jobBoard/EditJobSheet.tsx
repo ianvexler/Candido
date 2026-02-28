@@ -1,7 +1,7 @@
 import { XIcon } from "lucide-react";
 import { VisuallyHidden } from "radix-ui";
 import { SheetContent, SheetTitle } from "../ui/Sheet";
-import { JobBoardEntry, JobStatus } from "@/lib/types";
+import { JobBoardEntry, JobStatus, jobStatusColors } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
@@ -169,17 +169,6 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
     }
   }
 
-  const STATUS_COLORS: Record<JobStatus, string> = {
-    PENDING: "bg-slate-300",
-    APPLIED: "bg-yellow-500",
-    ASSESSMENT: "bg-cyan-500",
-    INTERVIEW: "bg-indigo-500",
-    OFFERED: "bg-emerald-500",
-    REJECTED: "bg-red-400",
-    ACCEPTED: "bg-green-600",
-    ARCHIVED: "bg-black",
-  };
-
   return (
     <SheetContent 
       showCloseButton={false} 
@@ -202,8 +191,8 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
         <div className="flex items-start justify-between gap-4 px-6 py-5">
           <div className="min-w-0 flex-1 flex items-center gap-3 pt-1">
             <div 
-              className={`shrink-0 w-5 h-5 rounded-sm ${STATUS_COLORS[status]}`}
-              title={capitalize(status.toLowerCase())}
+              className={`shrink-0 w-5 h-5 rounded-sm ${jobStatusColors[status]}`}
+              title={status.toLowerCase()}
             />
 
             <InlineInput

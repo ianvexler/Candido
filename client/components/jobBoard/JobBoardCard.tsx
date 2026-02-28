@@ -1,4 +1,4 @@
-import { JobBoardEntry, JobStatus } from "@/lib/types";
+import { JobBoardEntry, JobStatus, jobStatusColors } from "@/lib/types";
 import { Card, CardContent } from "../ui/Card";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { useDragOperation } from "@dnd-kit/react";
@@ -11,17 +11,6 @@ interface JobBoardCardProps {
   index: number;
   onSelectJob: (job: JobBoardEntry) => void;
   displayStatus?: JobStatus;
-}
-
-const JOB_STATUS_COLORS: Record<JobStatus, string> = {
-  PENDING: "bg-slate-300",
-  APPLIED: "bg-yellow-500",
-  ASSESSMENT: "bg-cyan-500",
-  INTERVIEW: "bg-indigo-500",
-  OFFERED: "bg-emerald-500",
-  REJECTED: "bg-red-400",
-  ACCEPTED: "bg-green-600",
-  ARCHIVED: "bg-black",
 }
 
 const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCardProps) => {
@@ -46,7 +35,7 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
     >
       <CardContent className="px-0">
         <div className="relative">
-          <div className={`absolute -left-[2px] top-0 bottom-0 w-[3px] ${JOB_STATUS_COLORS[displayStatus ?? entry.status]} rounded`} aria-hidden />
+          <div className={`absolute -left-[2px] top-0 bottom-0 w-[3px] ${jobStatusColors[displayStatus ?? entry.status]} rounded`} aria-hidden />
           <div className="px-4">
             <p className="text-sm font-medium">{entry.title}</p>
             <p className="text-xs text-gray-500">{entry.company}</p>

@@ -1,8 +1,8 @@
 "use client";
 
-import { JobBoardEntry } from "@/lib/types";
+import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { useMemo } from "react";
-import { SearchIcon, TagIcon, XIcon } from "lucide-react";
+import { SearchIcon, TagIcon, XIcon, FilterIcon } from "lucide-react";
 import { FieldLabel } from "@/components/ui/Field";
 import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from "@/components/ui/InputGroup";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { cn } from "@/lib/utils";
+import { capitalize, cn } from "@/lib/utils";
 
 interface BoardFiltersProps {
   jobBoardEntries: JobBoardEntry[];
@@ -27,6 +27,10 @@ interface BoardFiltersProps {
   onToggleRejected: () => void;
   showArchived: boolean;
   onToggleArchived: () => void;
+
+  statusFilter?: JobStatus[];
+  onStatusFilterToggle?: (status: JobStatus, checked: boolean) => void;
+  onClearStatusFilter?: () => void;
 }
 
 const BoardFilters = ({
@@ -40,7 +44,11 @@ const BoardFilters = ({
   onToggleRejected,
   showArchived,
   onToggleArchived,
+  statusFilter,
+  onStatusFilterToggle,
+  onClearStatusFilter,
 }: BoardFiltersProps) => {
+  const showStatusFilter = statusFilter !== undefined && onStatusFilterToggle !== undefined && onClearStatusFilter !== undefined;
   const allTags = useMemo(() => [
     ...new Set(
       jobBoardEntries.flatMap((e) =>
@@ -70,6 +78,60 @@ const BoardFilters = ({
             />
           </InputGroup>
         </div>
+
+        {showStatusFilter && (
+          <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className={cn(
+                    "px-4 flex w-32",
+                    tags.length > 0 ? "justify-between" : "justify-center"
+                  )}
+                  variant="outline"
+                >
+                  <div className="flex items-center gap-1">
+                    <FilterIcon className="size-4" />
+                    Status
+                  </div>
+                  {(statusFilter?.length ?? 0) > 0 && (
+                    <span className="ml-1 text-xs bg-primary/20 px-1.5 py-0.5 rounded">
+                      {statusFilter!.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="min-w-40">
+                {Object.values(JobStatus).map((s) => (
+                  <DropdownMenuCheckboxItem
+                    key={s}
+                    checked={statusFilter!.includes(s)}
+                    onCheckedChange={(checked) =>
+                      onStatusFilterToggle!(s, checked === true)
+                    }
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {capitalize(s.toLowerCase())}
+                  </DropdownMenuCheckboxItem>
+                ))}
+
+                {(statusFilter?.length ?? 0) > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={onClearStatusFilter}
+                      className="text-muted-foreground"
+                    >
+                      <XIcon className="size-4" />
+                      Clear All
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
 
         <div className="flex items-center gap-1">
           <DropdownMenu>
@@ -136,7 +198,7 @@ const BoardFilters = ({
           <button
             onClick={onToggleRejected}
             className={cn(
-              "cursor-pointer px-3 py-1.5 rounded-full text-sm transition-colors",
+              "cursor-pointer px-3 py-1.5 rounded-md text-sm transition-colors",
               showRejected
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted/50 text-muted-foreground hover:bg-muted"
@@ -148,7 +210,7 @@ const BoardFilters = ({
           <button
             onClick={onToggleArchived}
             className={cn(
-              "cursor-pointer px-3 py-1.5 rounded-full text-sm transition-colors",
+              "cursor-pointer px-3 py-1.5 rounded-md text-sm transition-colors",
               showArchived
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted/50 text-muted-foreground hover:bg-muted"

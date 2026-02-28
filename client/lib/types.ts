@@ -21,6 +21,17 @@ export enum JobStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export const jobStatusColors: Record<JobStatus, string> = {
+  PENDING: "bg-slate-300",
+  APPLIED: "bg-yellow-500",
+  ASSESSMENT: "bg-cyan-500",
+  INTERVIEW: "bg-indigo-500",
+  OFFERED: "bg-emerald-500",
+  REJECTED: "bg-red-400",
+  ACCEPTED: "bg-green-600",
+  ARCHIVED: "bg-black",
+};
+
 export type JobBoardEntry = {
   id: number;
   number: number;
