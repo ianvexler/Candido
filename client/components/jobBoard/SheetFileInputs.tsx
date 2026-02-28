@@ -118,7 +118,6 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
         onDelete={() => handleDelete(cvFile)}
         fileInputRef={cvFileInput}
       />
-
       <FileAttachment
         label="Cover Letter"
         file={coverLetterFile}

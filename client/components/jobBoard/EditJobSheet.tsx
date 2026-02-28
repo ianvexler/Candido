@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import debounce from "lodash.debounce";
 import { Button } from "../ui/Button";
 import InlineInput from "../ui/InlineInput";
-import { FieldLabel } from "../ui/Field";
 import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -18,6 +17,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { redirect } from "next/navigation";
 import ConfirmationModal from "../common/ConfirmationModal";
 import SheetFileInputs from "./SheetFileInputs";
+import TagsInput from "./TagsInput";
 
 interface EditJobSheetProps {
   entry: JobBoardEntry;
@@ -36,6 +36,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
   const description = entry.description ?? "";
 
   const [editorHtml, setEditorHtml] = useState(description);
+  const [tags, setTags] = useState<string[]>(entry.jobBoardTags?.map((t) => t.name) ?? []);
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -53,20 +54,29 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
   });
 
   const hasUpdatedFields = useMemo(() => {
-    return title !== entry.title ||
+    const entryTagNames = entry.jobBoardTags?.map((t) => t.name) ?? [];
+    const tagsChanged =
+      tags.length !== entryTagNames.length ||
+      tags.some((t) => !entryTagNames.includes(t)) ||
+      entryTagNames.some((t) => !tags.includes(t));
+
+    return (
+      title !== entry.title ||
       company !== entry.company ||
       location !== entry.location ||
       salary !== entry.salary ||
       url !== entry.url ||
       status !== entry.status ||
-      editorHtml !== description;
-  }, [title, entry, company, location, salary, url, status, editorHtml, description]);
+      editorHtml !== description ||
+      tagsChanged
+    );
+  }, [title, entry, company, location, salary, url, status, editorHtml, description, tags]);
 
-  const stateRef = useRef({ title, company, location, salary, url, status, editorHtml });
-  stateRef.current = { title, company, location, salary, url, status, editorHtml };
+  const stateRef = useRef({ title, company, location, salary, url, status, editorHtml, tags });
+  stateRef.current = { title, company, location, salary, url, status, editorHtml, tags };
 
   const performSave = useCallback(async (): Promise<boolean> => {
-    const { title: t, company: c, location: loc, salary: sal, url: u, status: s, editorHtml: html } = stateRef.current;
+    const { title: t, company: c, location: loc, salary: sal, url: u, status: s, editorHtml: html, tags: tagNames } = stateRef.current;
 
     if (!t.trim() || !c.trim()) {
       toast.error("Title and company are required");
@@ -86,7 +96,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
         newNumber = maxNumber + 1;
       }
 
-      const response = await updateJobBoardEntry(entry.id, t, c, loc, sal, u, html, s, newNumber);
+      const response = await updateJobBoardEntry(entry.id, t, c, loc, sal, u, html, s, newNumber, tagNames);
       
       onUpdateJob(response.jobBoardEntry);
       return true;
@@ -110,7 +120,7 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
     if (!hasUpdatedFields) return;
     debouncedSave();
     return () => debouncedSave.cancel();
-  }, [title, company, location, salary, url, status, editorHtml, hasUpdatedFields, debouncedSave]);
+  }, [title, company, location, salary, url, status, editorHtml, tags, hasUpdatedFields, debouncedSave]);
 
   const handleConfirmation = async () => {
     debouncedSave.cancel();
@@ -190,11 +200,12 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
 
       <div className="shrink-0 border-b border-border bg-muted/30">
         <div className="flex items-start justify-between gap-4 px-6 py-5">
-          <div className="min-w-0 flex-1 flex items-center gap-3">
+          <div className="min-w-0 flex-1 flex items-center gap-3 pt-1">
             <div 
               className={`shrink-0 w-5 h-5 rounded-sm ${STATUS_COLORS[status]}`}
               title={capitalize(status.toLowerCase())}
             />
+
             <InlineInput
               id="title"
               type="text"
@@ -210,117 +221,128 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
           <button
             type="button"
             onClick={handleCancelClick}
-            className="shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="cursor-pointer shrink-0 rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
-            <XIcon className="size-7" />
+            <XIcon className="size-5" />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-8 overflow-y-auto flex-1 min-h-0 px-6 py-6">
-        <section className="space-y-5">
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-5">
-              <div className="flex flex-col gap-2">
-                <FieldLabel className="text-xs font-medium text-muted-foreground">
-                  Company
-                </FieldLabel>
+      <div className="flex flex-col gap-6 overflow-y-auto flex-1 min-h-0 px-6 py-6">
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-5">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Company
+              </h3>
 
-                <InlineInput
-                  id="company"
-                  type="text"
-                  autoComplete="company"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  disabled={loading}
-                  placeholder="Company name..."
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <FieldLabel className="text-xs font-medium text-muted-foreground">
-                  Status
-                </FieldLabel>
-
-                <Select value={status} onValueChange={(v) => setStatus(v as JobStatus)} disabled={loading}>
-                  <SelectTrigger className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-  
-                  <SelectContent position="popper">
-                    <SelectGroup>
-                      {Object.values(JobStatus).map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {capitalize(s.toLowerCase())}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="flex flex-col gap-2">
-                <FieldLabel className="text-xs font-medium text-muted-foreground">
-                  Location
-                </FieldLabel>
-
-                <InlineInput
-                  id="location"
-                  type="text"
-                  autoComplete="location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  disabled={loading}
-                  placeholder="e.g. Remote, New York"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <FieldLabel className="text-xs font-medium text-muted-foreground">
-                  Salary
-                </FieldLabel>
-
-                <InlineInput
-                  id="salary"
-                  type="text"
-                  autoComplete="salary"
-                  value={salary}
-                  onChange={(e) => setSalary(e.target.value)}
-                  disabled={loading}
-                  placeholder="e.g. $120k - $150k"
-                />
-              </div>
+              <InlineInput
+                id="company"
+                type="text"
+                autoComplete="company"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                disabled={loading}
+                placeholder="Company name..."
+              />
             </div>
 
             <div className="flex flex-col gap-2">
-              <FieldLabel className="text-xs font-medium text-muted-foreground">
-                URL
-              </FieldLabel>
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Status
+              </h3>
+
+              <Select value={status} onValueChange={(v) => setStatus(v as JobStatus)} disabled={loading}>
+                <SelectTrigger className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+
+                <SelectContent position="popper">
+                  <SelectGroup>
+                    {Object.values(JobStatus).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {capitalize(s.toLowerCase())}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Location
+              </h3>
 
               <InlineInput
-                id="url"
+                id="location"
                 type="text"
-                autoComplete="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                autoComplete="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
                 disabled={loading}
-                placeholder="https://example.com"
+                placeholder="e.g. Remote, New York"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Salary
+              </h3>
+
+              <InlineInput
+                id="salary"
+                type="text"
+                autoComplete="salary"
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+                disabled={loading}
+                placeholder="e.g. $120k - $150k"
               />
             </div>
           </div>
-        </section>
 
-        <section className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              URL
+            </h3>
+
+            <InlineInput
+              id="url"
+              type="text"
+              autoComplete="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={loading}
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-2">
           <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Attachments
           </h3>
-          <SheetFileInputs entry={entry} />
-        </section>
 
-        <section className="space-y-4">
+          <SheetFileInputs entry={entry} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Tags
+          </h3>
+
+          <TagsInput
+            allEntries={allEntries}
+            tags={tags}
+            onTagsChange={setTags}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
           <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Description
           </h3>
@@ -329,13 +351,9 @@ const EditJobSheet = ({ entry, allEntries, onClose, onUpdateJob }: EditJobSheetP
             <SimpleMenuBar editor={editor} />
             <EditorContent editor={editor} className="min-h-[140px]" />
           </div>
-        </section>
-        
-        <div className="flex items-center justify-end gap-3 pt-2">
-          {loading && (
-            <span className="text-sm text-muted-foreground animate-pulse">Saving...</span>
-          )}
+        </div>
 
+        <div className="hidden">
           <Button 
             type="button"
             variant="outline"

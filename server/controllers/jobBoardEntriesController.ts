@@ -33,13 +33,13 @@ export const createJobBoardEntry = async (req: Request, res: Response) => {
 };
 
 export const updateJobBoardEntry = async (req: Request, res: Response) => {
-  const { id, title, company, location, salary, url, description, status, number } = req.body;
+  const { id, title, company, location, salary, url, description, status, number, tagNames } = req.body;
   const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status, number);
+  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status, number, tagNames);
   return res.status(200).json({ jobBoardEntry });
 };
 

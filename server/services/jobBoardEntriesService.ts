@@ -45,8 +45,8 @@ export const jobBoardEntriesService = {
     });
   },
 
-  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus, number: number) {
-    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
+  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus, number: number, tagNames?: string[]) {
+    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id } });
 
     if (!currentEntry) {
       throw createHttpError(404, "Job board entry not found");
@@ -89,18 +89,37 @@ export const jobBoardEntriesService = {
       }
     }
 
+    const updateData: Parameters<typeof prisma.jobBoardEntry.update>[0]["data"] = {
+      title,
+      company,
+      location,
+      salary,
+      url,
+      description,
+      status,
+      number: number,
+    };
+
+    if (tagNames !== undefined) {
+      const tagNamesTrimmed = tagNames.map((n) => n.trim()).filter(Boolean);
+      const tags = await Promise.all(
+        tagNamesTrimmed.map(async (name) => {
+          const existing = await prisma.jobBoardTag.findUnique({
+            where: { userId_name: { userId, name } },
+          });
+          if (existing) return existing;
+          return prisma.jobBoardTag.create({
+            data: { userId, name },
+          });
+        })
+      );
+      updateData.jobBoardTags = { set: tags.map((t) => ({ id: t.id })) };
+    }
+
     return await prisma.jobBoardEntry.update({
       where: { id },
-      data: {
-        title,
-        company,
-        location,
-        salary,
-        url,
-        description,
-        status,
-        number: number,
-      },
+      data: updateData,
+      include: { jobBoardTags: true },
     });
   },
 

@@ -22,7 +22,7 @@ const Navbar = () => {
 
   return (
     <aside className="fixed left-0 top-0 z-10 flex h-screen w-18 shrink-0 flex-col items-center border-r border-border bg-candido-black py-4 mr-16">
-      <Link href="/" className="mb-6">
+      <Link href="/" className="mb-6 my-3">
         <Image src={Logo} alt="Candido" width={34} height={36} className="rounded" />
       </Link>
 
