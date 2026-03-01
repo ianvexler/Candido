@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from "../ui/Table";
 import getFeedbackEntries from "@/api/resources/feedbackEntries/getFeedbackEntries";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -34,7 +34,16 @@ const FeedbackTable = () => {
   }
 
   return (
-    <Table className="mt-2">
+    <Table 
+      className="mt-2" 
+      extra={
+        <>
+          {feedbackEntries.length === 0 && (
+            <TableEmpty>No feedback entries found</TableEmpty>
+          )}
+        </>
+      }
+    >
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
