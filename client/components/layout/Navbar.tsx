@@ -6,7 +6,6 @@ import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
 import { HomeIcon, KanbanIcon, LogOutIcon, SheetIcon, UserIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 
 const navLinks = [
   { href: "/dashboard", icon: HomeIcon, label: "Dashboard" },
@@ -17,40 +16,15 @@ const navLinks = [
 const Navbar = () => {
   const { isAuthenticated, handleLogout } = useAuth();
   const pathname = usePathname();
-
-  if (!isAuthenticated) {
-    if (pathname === "/") {
-      return (
-        <header className="fixed top-0 left-0 right-0 z-10 flex items-center justify-between border-b border-white/10 bg-candido-black px-4 py-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src={Logo} alt="Candido" width={35} height={40} className="rounded" />
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Button
-              className="bg-white text-black hover:bg-white/90"
-              asChild
-            >
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button
-              className="bg-white text-black hover:bg-white/90"
-              asChild
-            >
-              <Link href="/register">Get started</Link>
-            </Button>
-          </div>
-        </header>
-      );
-    }
-
-    return null;
-  }
-
+  
   const linkClass = (href: string) =>
     pathname === href || (href !== "/" && pathname.startsWith(href))
-      ? "bg-white/10 text-white"
-      : "text-gray-400 hover:bg-white/5 hover:text-white";
+  ? "bg-white/10 text-white"
+  : "text-gray-400 hover:bg-white/5 hover:text-white";
+  
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <>

@@ -7,7 +7,6 @@ import { uploadCoverLetterJobBoardEntry } from "@/api/resources/jobBoardEntries/
 import { getFileUpload } from "@/api/resources/uploads/getFileUpload";
 import Description from "@/components/common/Description";
 import Title from "@/components/common/Title";
-import AddJobModal from "@/components/jobBoard/AddJobModal";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
 import SheetTable from "@/components/jobBoard/sheet/SheetTable";
 import { useBoardFilters } from "@/hooks/useBoardFilters";
@@ -16,13 +15,15 @@ import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
-import JobEditPanel from "@/components/jobBoard/JobEditPanel";
+import JobFormSheet from "@/components/jobBoard/JobFormSheet";
 
 const SheetPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<JobStatus[]>([]);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     searchInput,
@@ -40,23 +41,26 @@ const SheetPage = () => {
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (initializedRef.current) return;
+    if (initializedRef.current) {
+      return;
+    }
     initializedRef.current = true;
+
     void getJobBoardEntries()
       .then((response) => setJobBoardEntries(response.jobBoardEntries))
       .catch((error) => {
         console.error(error);
         toast.error("Failed to get job board entries");
       });
+
     return () => {
       initializedRef.current = false;
     };
   }, [showArchived, showRejected]);
 
-  const showAccepted = useMemo(
-    () => jobBoardEntries.some((e) => e.status === JobStatus.ACCEPTED),
-    [jobBoardEntries]
-  );
+  const showAccepted = useMemo(() => 
+    jobBoardEntries.some((e) => e.status === JobStatus.ACCEPTED),
+  [jobBoardEntries]);
 
   const handleStatusFilterToggle = useCallback((status: JobStatus, checked: boolean) => {
     setStatusFilter((prev) =>
@@ -66,12 +70,19 @@ const SheetPage = () => {
 
   const sortedEntries = useMemo(() => {
     let entries = filteredEntries;
-    if (!showRejected) entries = entries.filter((e) => e.status !== JobStatus.REJECTED);
-    if (!showArchived) entries = entries.filter((e) => e.status !== JobStatus.ARCHIVED);
-    if (!showAccepted) entries = entries.filter((e) => e.status !== JobStatus.ACCEPTED);
+    if (!showRejected) {
+      entries = entries.filter((e) => e.status !== JobStatus.REJECTED);
+    }
+    if (!showArchived) {
+      entries = entries.filter((e) => e.status !== JobStatus.ARCHIVED);
+    }
+    if (!showAccepted) {
+      entries = entries.filter((e) => e.status !== JobStatus.ACCEPTED);
+    }
     if (statusFilter.length > 0) {
       entries = entries.filter((e) => statusFilter.includes(e.status));
     }
+
     return [...entries].sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
@@ -91,8 +102,25 @@ const SheetPage = () => {
   }, []);
 
   const handleSelectJob = useCallback((job: JobBoardEntry) => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    setOpenAddJobModal(false);
     setSelectedJob(job);
+    setIsSheetOpen(true);
   }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      setIsSheetOpen(false);
+      closeTimeoutRef.current = setTimeout(() => {
+        setOpenAddJobModal(false);
+        setSelectedJob(undefined);
+        closeTimeoutRef.current = null;
+      }, 300);
+    }
+  }, []);
+
+  useEffect(() => () => { if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current); }, []);
 
   const handleCvUpload = useCallback(
     async (entry: JobBoardEntry, file: File) => {
@@ -120,6 +148,7 @@ const SheetPage = () => {
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
         );
+
         setSelectedJob((prev) => (prev?.id === entry.id ? updated : prev));
         toast.success("Cover letter uploaded");
       } catch (error) {
@@ -169,10 +198,13 @@ const SheetPage = () => {
       const countInStatus = jobBoardEntries.filter((e) => e.status === newStatus).length;
       const newNumber = countInStatus + 1;
       const updated = { ...entry, status: newStatus, number: newNumber };
+      
       setJobBoardEntries((prev) =>
         prev.map((e) => (e.id === entry.id ? updated : e))
       );
+      
       setSelectedJob((prev) => (prev?.id === entry.id ? updated : prev));
+      
       try {
         await updateJobBoardEntry(
           entry.id,
@@ -188,6 +220,7 @@ const SheetPage = () => {
       } catch (error) {
         console.error(error);
         toast.error(`Failed to update ${entry.title}`);
+
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? entry : e))
         );
@@ -237,14 +270,13 @@ const SheetPage = () => {
           onCoverLetterDownload={handleCoverLetterDownload}
         />
 
-        <AddJobModal
-          isOpen={openAddJobModal}
-          onClose={() => setOpenAddJobModal(false)}
-          onAddJob={onAddJob}
-        />
-
         <button
-          onClick={() => setOpenAddJobModal(true)}
+          onClick={() => {
+            if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+            setSelectedJob(undefined);
+            setOpenAddJobModal(true);
+            setIsSheetOpen(true);
+          }}
           className="cursor-pointer fixed bottom-6 right-6 size-15 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center"
           aria-label="Add job"
         >
@@ -252,14 +284,25 @@ const SheetPage = () => {
         </button>
       </div>
 
-      <Sheet open={!!selectedJob} onOpenChange={() => setSelectedJob(undefined)}>
-        {selectedJob && (
-          <JobEditPanel
-            entry={selectedJob}
-            allEntries={jobBoardEntries}
-            onClose={() => setSelectedJob(undefined)}
-            onUpdateJob={onUpdateJob}
-          />
+      <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
+        {(openAddJobModal || selectedJob) && (
+          openAddJobModal ? (
+            <JobFormSheet
+              mode="create"
+              entry={null}
+              allEntries={jobBoardEntries}
+              onClose={() => handleSheetOpenChange(false)}
+              onAddJob={onAddJob}
+            />
+          ) : (
+            <JobFormSheet
+              mode="edit"
+              entry={selectedJob!}
+              allEntries={jobBoardEntries}
+              onClose={() => handleSheetOpenChange(false)}
+              onUpdateJob={onUpdateJob}
+            />
+          )
         )}
       </Sheet>
     </>

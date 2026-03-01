@@ -5,7 +5,6 @@ import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBo
 import { getJobBoardEntries } from "@/api/resources/jobBoardEntries/getJobBoardEntries";
 import Description from "@/components/common/Description";
 import Title from "@/components/common/Title";
-import AddJobModal from "@/components/jobBoard/AddJobModal";
 import JobBoardColumn from "@/components/jobBoard/JobBoardColumn";
 import {
   ActionDropZones,
@@ -24,17 +23,19 @@ import { PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
-import JobEditPanel from "@/components/jobBoard/JobEditPanel";
+import JobFormSheet from "@/components/jobBoard/JobFormSheet";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
 
 const BoardPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
-
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFromOffered, setDraggedFromOffered] = useState(false);
   const [draggedEntryOriginalStatus, setDraggedEntryOriginalStatus] = useState<Record<number, JobStatus>>();
+  
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     searchInput,
@@ -139,8 +140,27 @@ const BoardPage = () => {
 
   const handleSelectJob = (job: JobBoardEntry) => {
     scrollPositionRef.current = scrollContainerRef.current?.scrollLeft ?? 0;
+    
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    setOpenAddJobModal(false);
     setSelectedJob(job);
+    setIsSheetOpen(true);
   };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      setIsSheetOpen(false);
+
+      closeTimeoutRef.current = setTimeout(() => {
+        setOpenAddJobModal(false);
+        setSelectedJob(undefined);
+        closeTimeoutRef.current = null;
+      }, 300);
+    }
+  };
+
+  useEffect(() => () => { if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current); }, []);
 
   const onUpdateJob = (job: JobBoardEntry) => {
     setJobBoardEntries((prev) => prev.map((entry) => entry.id === job.id ? job : entry));
@@ -332,15 +352,14 @@ const BoardPage = () => {
           {isDragging && <ActionDropZones showAcceptedZone={draggedFromOffered} />}
         </DragDropProvider>
 
-        <AddJobModal 
-          isOpen={openAddJobModal} 
-          onClose={() => setOpenAddJobModal(false)} 
-          onAddJob={onAddJob}
-        />
-
         {!isDragging && (
           <button
-            onClick={() => setOpenAddJobModal(true)}
+          onClick={() => {
+            if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+            setSelectedJob(undefined);
+            setOpenAddJobModal(true);
+            setIsSheetOpen(true);
+          }}
             className="cursor-pointer fixed bottom-6 right-6 size-15 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center"
             aria-label="Add job"
           >
@@ -349,14 +368,25 @@ const BoardPage = () => {
         )}
       </div>
 
-      <Sheet open={!!selectedJob} onOpenChange={() => setSelectedJob(undefined)}>
-        {selectedJob && (
-          <JobEditPanel 
-            entry={selectedJob}
-            allEntries={jobBoardEntries}
-            onClose={() => setSelectedJob(undefined)}
-            onUpdateJob={onUpdateJob}
-          />
+      <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
+        {(openAddJobModal || selectedJob) && (
+          openAddJobModal ? (
+            <JobFormSheet
+              mode="create"
+              entry={null}
+              allEntries={jobBoardEntries}
+              onClose={() => handleSheetOpenChange(false)}
+              onAddJob={onAddJob}
+            />
+          ) : (
+            <JobFormSheet
+              mode="edit"
+              entry={selectedJob!}
+              allEntries={jobBoardEntries}
+              onClose={() => handleSheetOpenChange(false)}
+              onUpdateJob={onUpdateJob}
+            />
+          )
         )}
       </Sheet>
     </>

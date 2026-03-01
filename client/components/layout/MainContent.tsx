@@ -13,7 +13,7 @@ const MainContent = ({ children }: MainContentProps) => {
   return (
     <div
       className={`flex min-h-screen flex-1 flex-col overflow-y-auto min-w-0 ${
-        isLanding ? "pl-0 pt-14" : "pl-0 md:pl-18 pt-14 md:pt-0"
+        isLanding ? "pl-0 pt-0" : "pl-0 md:pl-18 pt-14 md:pt-0"
       }`}
     >
       {children}

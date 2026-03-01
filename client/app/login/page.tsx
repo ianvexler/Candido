@@ -1,7 +1,7 @@
 "use client";
 
 import { SubmitEvent, useEffect, useState } from "react";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { Button } from "@/components/ui/Button";
 import {
@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/Label";
 import Logo from "@/lib/images/MainLogo.png";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const searchParams = useSearchParams();
@@ -26,13 +27,15 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const from = searchParams.get("from") ?? "/";
+  const router = useRouter();
+
+  const from = searchParams.get("from") ?? "/dashboard";
 
   useEffect(() => {
     if (isAuthenticated) {
-      redirect(from);
+      router.push(from);
     }
-  }, [isAuthenticated, from]);
+  }, [isAuthenticated, from, router]);
 
   const onSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -41,7 +44,7 @@ const LoginPage = () => {
 
     try {
       await handleLogin(email, password);
-      redirect(from);
+      router.push(from);
     } catch (err) {
       const message =
         err instanceof AxiosError && err.response?.data?.error
@@ -123,7 +126,7 @@ const LoginPage = () => {
               variant="outline"
               disabled={loading}
               className="w-full"
-              onClick={() => redirect(`/register?from=${from}`)}
+              onClick={() => router.push(`/register?from=${from}`)}
             >
               Create an account
             </Button>
