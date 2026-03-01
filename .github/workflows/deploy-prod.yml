@@ -73,6 +73,8 @@ jobs:
             AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
             AWS_REGION=${{ secrets.AWS_REGION }}
             GITHUB_REPO_OWNER=${{ github.repository_owner }}
+            BREVO_SMTP_LOGIN=${{ secrets.BREVO_SMTP_LOGIN }}
+            BREVO_SMTP_KEY=${{ secrets.BREVO_SMTP_KEY }}
             ENVEOF
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker-compose -f docker-compose.prod.yml --env-file server/.env pull
