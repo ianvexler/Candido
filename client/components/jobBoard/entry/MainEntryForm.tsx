@@ -3,7 +3,7 @@ import SimpleMenuBar from "@/components/richEditor/simpleEditor/SimpleMenuBar";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "@/components/ui/select";
+import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "@/components/ui/Select";
 import { JobBoardEntry, JobStatus } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import { TextStyleKit } from "@tiptap/extension-text-style";

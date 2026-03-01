@@ -7,7 +7,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import debounce from "lodash.debounce";
 import InlineInput from "../ui/InlineInput";
-import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
+import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/Select";
 import { createJobBoardEntry } from "@/api/resources/jobBoardEntries/createJobBoardEntry";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 import { deleteJobBoardEntry } from "@/api/resources/jobBoardEntries/deleteJobBoardEntry";

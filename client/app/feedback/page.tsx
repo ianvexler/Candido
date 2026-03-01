@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FeedbackType } from "@/lib/types";
 import { MessageSquareIcon, BugIcon, LightbulbIcon } from "lucide-react";
