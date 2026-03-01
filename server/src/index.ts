@@ -7,6 +7,7 @@ import sessionsRouter from "../routes/sessions.js";
 import jobBoardEntriesRouter from "../routes/jobBoardEntries.js";
 import uploadsRouter from "../routes/uploads.js";
 import usersRouter from "../routes/users.js";
+import feedbackEntriesRouter from "../routes/feedbackEntries.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.get("/", (_req: Request, res: Response) => {
 app.use("/api/sessions", sessionsRouter);
 app.use("/api/job-board-entries", jobBoardEntriesRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/feedback-entries", feedbackEntriesRouter);
 
 // Returns uploaded files
 app.use("/uploads", uploadsRouter);

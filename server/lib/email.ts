@@ -14,38 +14,64 @@ const transporter = nodemailer.createTransport({
 });
 
 const LOGO_CID = "candido-logo";
+const FEEDBACK_RECIPIENT_EMAIL = "no-reply@candidohq.com";
 
-const getVerificationEmailHtml = (name: string, verificationUrl: string): string => {
-  const baseDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const templatePath = path.join(baseDir, "templates", "verification-email.html");
-  const template = fs.readFileSync(templatePath, "utf-8");
+const getBaseDir = () => path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-  return template
-    .replace("{{LOGO_SRC}}", `cid:${LOGO_CID}`)
-    .replace("{{NAME}}", name)
-    .replace("{{VERIFICATION_URL}}", verificationUrl);
-}
+const getLogoAttachment = () => ({
+  filename: "logo.png",
+  content: fs.readFileSync(path.join(getBaseDir(), "assets", "logo.png")),
+  cid: LOGO_CID,
+});
 
-export const sendVerificationEmail = async (email: string, name: string, verificationUrl: string) => {
-  const login = process.env["BREVO_SMTP_LOGIN"];
-  if (!login || !process.env["BREVO_SMTP_KEY"]) {
+const loadTemplate = (name: string, replacements: Record<string, string>): string => {
+  let html = fs.readFileSync(path.join(getBaseDir(), "templates", `${name}.html`), "utf-8");
+  html = html.replace("{{LOGO_SRC}}", `cid:${LOGO_CID}`);
+  for (const [key, value] of Object.entries(replacements)) {
+    html = html.replace(`{{${key}}}`, value);
+  }
+  return html;
+};
+
+const requireEmailConfig = () => {
+  if (!process.env["BREVO_SMTP_LOGIN"] || !process.env["BREVO_SMTP_KEY"]) {
     throw new Error("BREVO_SMTP_LOGIN and BREVO_SMTP_KEY must be set");
   }
+};
 
-  const baseDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const logoPath = path.join(baseDir, "assets", "logo.png");
-
+const sendTemplateEmail = async (
+  to: string,
+  subject: string,
+  templateName: string,
+  replacements: Record<string, string>
+) => {
+  requireEmailConfig();
   await transporter.sendMail({
     from: "Candido <no-reply@candidohq.com>",
-    to: email,
-    subject: "Verify your Candido account",
-    html: getVerificationEmailHtml(name, verificationUrl),
-    attachments: [
-      {
-        filename: "logo.png",
-        content: fs.readFileSync(logoPath),
-        cid: LOGO_CID,
-      },
-    ],
+    to,
+    subject,
+    html: loadTemplate(templateName, replacements),
+    attachments: [getLogoAttachment()],
   });
-}
+};
+
+export const sendVerificationEmail = async (email: string, name: string, verificationUrl: string) => {
+  await sendTemplateEmail(email, "Verify your Candido account", "verification-email", {
+    NAME: name,
+    VERIFICATION_URL: verificationUrl,
+  });
+};
+
+export const sendNewFeedbackEmail = async (
+  username: string,
+  category: string,
+  title: string,
+  content: string
+) => {
+  await sendTemplateEmail(FEEDBACK_RECIPIENT_EMAIL, "New feedback entry", "new-feedback-email", {
+    USERNAME: username,
+    CATEGORY: category,
+    TITLE: title,
+    CONTENT: content,
+  });
+};

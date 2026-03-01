@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New feedback entry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td style="text-align: center;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+          <tr>
+            <td style="background-color: #222222; padding: 32px 40px; text-align: center; border-radius: 10px 10px 0 0;">
+              <img src="{{LOGO_SRC}}" alt="Candido" width="176" height="44" style="display: block; margin: 0 auto; max-width: 176px; height: auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px;">
+              <h1 style="margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #222222;">New feedback from {{USERNAME}}</h1>
+              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.6; color: #525252;">A new feedback entry has been submitted.</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 24px; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 16px; background-color: #fafafa; font-size: 12px; font-weight: 600; color: #737373;">Category</td>
+                  <td style="padding: 16px; font-size: 14px; color: #222222;">{{CATEGORY}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 16px; background-color: #fafafa; font-size: 12px; font-weight: 600; color: #737373;">Title</td>
+                  <td style="padding: 16px; font-size: 14px; color: #222222;">{{TITLE}}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 16px; background-color: #fafafa; font-size: 12px; font-weight: 600; color: #737373; vertical-align: top;">Content</td>
+                  <td style="padding: 16px; font-size: 14px; line-height: 1.6; color: #222222; white-space: pre-wrap;">{{CONTENT}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

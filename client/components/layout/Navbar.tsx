@@ -4,8 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
-import { HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon, ShieldIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { FileTextIcon, HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon, ShieldIcon } from "lucide-react";
+import NavbarLink from "./NavbarLink";
 
 const navLinks = [
   { href: "/dashboard", icon: HomeIcon, label: "Dashboard" },
@@ -15,12 +15,6 @@ const navLinks = [
 
 const Navbar = () => {
   const { isAuthenticated, isAdmin, handleLogout } = useAuth();
-  const pathname = usePathname();
-  
-  const linkClass = (href: string) =>
-    pathname === href || (href !== "/" && pathname.startsWith(href))
-  ? "bg-white/10 text-white"
-  : "text-gray-400 hover:bg-white/5 hover:text-white";
   
   if (!isAuthenticated) {
     return null;
@@ -36,27 +30,30 @@ const Navbar = () => {
 
         <nav className="flex flex-1 flex-col gap-3">
           {navLinks.map(({ href, icon: Icon, label }) => (
-            <Link
+            <NavbarLink
               key={href}
               href={href}
-              className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass(href)}`}
               aria-label={label}
-              title={label}
+              label={label}
             >
               <Icon className="size-5" />
-            </Link>
+            </NavbarLink>
           ))}
         </nav>
 
         <div className="flex flex-col items-center justify-center gap-3">
-          <Link href="/settings" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/settings")}`}>
+          <NavbarLink href="/settings" label="Settings">
             <SettingsIcon className="size-5" />
-          </Link>
+          </NavbarLink>
+
+          <NavbarLink href="/feedback" label="Feedback">
+            <FileTextIcon className="size-5" />
+          </NavbarLink>
 
           {isAdmin && (
-            <Link href="/admin" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/admin")}`}>
+            <NavbarLink href="/admin" label="Admin">
               <ShieldIcon className="size-5" />
-            </Link>
+            </NavbarLink>
           )}
 
           <button
@@ -73,17 +70,17 @@ const Navbar = () => {
       {/* Mobile */}
       <nav className="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center justify-around border-b border-border bg-candido-black py-2">
         {navLinks.map(({ href, icon: Icon, label }) => (
-          <Link
+          <NavbarLink
             key={href}
             href={href}
-            className={`flex flex-col items-center justify-center gap-1 py-2 px-6 rounded-lg transition-colors min-w-[64px] ${linkClass(href)}`}
             aria-label={label}
             title={label}
           >
             <Icon className="size-6" />
             <span className="text-[10px]">{label}</span>
-          </Link>
+          </NavbarLink>
         ))}
+
         <button
           onClick={() => handleLogout()}
           className="flex flex-col items-center justify-center gap-1 py-2 px-6 rounded-lg transition-colors min-w-[64px] text-gray-400 hover:bg-white/5 hover:text-white"

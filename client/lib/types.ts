@@ -63,3 +63,9 @@ export type JobBoardTag = {
 
 export const JobEntryFileTypes = ["CV", "Cover Letter"] as const;
 export type JobEntryFileType = (typeof JobEntryFileTypes)[number];
+
+export enum FeedbackType {
+  BUG = 'BUG',
+  SUGGESTION = 'SUGGESTION',
+  OTHER = 'OTHER',
+}

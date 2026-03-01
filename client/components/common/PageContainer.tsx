@@ -1,8 +1,14 @@
+import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-const PageContainer = ({ children }: { children: ReactNode }) => {
+interface PageContainerProps {
+  children: ReactNode;
+  className?: string;
+}
+
+const PageContainer = ({ children, className }: PageContainerProps) => {
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 pt-12 pb-8">
+    <div className={cn("mx-auto w-full max-w-7xl px-6 pt-12 pb-8", className)}>
       {children}
     </div>
   );

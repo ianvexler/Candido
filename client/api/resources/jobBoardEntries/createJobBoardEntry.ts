@@ -11,5 +11,6 @@ export const createJobBoardEntry = async (title: string, company: string, locati
     status,
     description,
   });
+
   return response.data;
 };

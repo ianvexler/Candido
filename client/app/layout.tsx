@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import MainContent from "@/components/layout/MainContent";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
-import Footer from "@/components/layout/footer";
+import Footer from "@/components/layout/Footer";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 
 const dmSans = DM_Sans({
