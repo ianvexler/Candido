@@ -4,8 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
-import { FileTextIcon, HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon, ShieldIcon } from "lucide-react";
+import { FileTextIcon, HomeIcon, KanbanIcon, LogOutIcon, MenuIcon, SettingsIcon, SheetIcon, ShieldIcon, UploadIcon } from "lucide-react";
 import NavbarLink from "./NavbarLink";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/NavigationMenu";
+import ImportJobsModal from "@/components/common/ImportJobsModal";
+import { useState } from "react";
 
 const navLinks = [
   { href: "/dashboard", icon: HomeIcon, label: "Dashboard" },
@@ -15,7 +24,9 @@ const navLinks = [
 
 const Navbar = () => {
   const { isAuthenticated, isAdmin, handleLogout } = useAuth();
-  
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState("");
+
   if (!isAuthenticated) {
     return null;
   }
@@ -42,6 +53,15 @@ const Navbar = () => {
         </nav>
 
         <div className="flex flex-col items-center justify-center gap-3">
+          <button
+            onClick={() => setImportModalOpen(true)}
+            className="cursor-pointer flex size-10 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/5 hover:text-white"
+            aria-label="Import jobs"
+            title="Import jobs"
+          >
+            <UploadIcon className="size-5" />
+          </button>
+
           <NavbarLink href="/settings" label="Settings">
             <SettingsIcon className="size-5" />
           </NavbarLink>
@@ -68,29 +88,112 @@ const Navbar = () => {
       </aside>
 
       {/* Mobile */}
-      <nav className="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center justify-around border-b border-border bg-candido-black py-2">
-        {navLinks.map(({ href, icon: Icon, label }) => (
-          <NavbarLink
-            key={href}
-            href={href}
-            aria-label={label}
-            title={label}
-          >
-            <Icon className="size-6" />
-            <span className="text-[10px]">{label}</span>
-          </NavbarLink>
-        ))}
+      <nav className="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center justify-between border-b border-border bg-candido-black px-4 py-2 gap-4">
+        <Link href="/" className="shrink-0">
+          <Image src={Logo} alt="Candido" width={28} height={30} className="rounded" />
+        </Link>
 
-        <button
-          onClick={() => handleLogout()}
-          className="flex flex-col items-center justify-center gap-1 py-2 px-6 rounded-lg transition-colors min-w-[64px] text-gray-400 hover:bg-white/5 hover:text-white"
-          aria-label="Logout"
-          title="Logout"
+        <NavigationMenu
+          className="max-w-none flex-1 justify-end"
+          viewport={false}
+          value={mobileMenuOpen}
+          onValueChange={setMobileMenuOpen}
         >
-          <LogOutIcon className="size-6" />
-          <span className="text-[10px]">Logout</span>
-        </button>
+          <NavigationMenuList className="gap-0">
+            <NavigationMenuItem value="menu">
+              <NavigationMenuTrigger
+                hideChevron
+                className="h-10 w-10 bg-transparent px-0 text-gray-400 hover:text-white"
+              >
+                <MenuIcon className="size-5" />
+              </NavigationMenuTrigger>
+
+              <NavigationMenuContent className="absolute right-0 left-auto top-full mt-1.5 z-50 min-w-[180px] rounded-md bg-candido-black! p-1">
+                <ul className="flex flex-col">
+                  {navLinks.map(({ href, icon: Icon, label }) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={() => setMobileMenuOpen("")}
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                      >
+                        <Icon className="size-4" />
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+
+                  <li>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen("");
+                        setImportModalOpen(true);
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                    >
+                      <UploadIcon className="size-4" />
+                      Import
+                    </button>
+                  </li>
+
+                  <li>
+                    <Link
+                      href="/settings"
+                      onClick={() => setMobileMenuOpen("")}
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                    >
+                      <SettingsIcon className="size-4" />
+                      Settings
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link
+                      href="/feedback"
+                      onClick={() => setMobileMenuOpen("")}
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                    >
+                      <FileTextIcon className="size-4" />
+                      Feedback
+                    </Link>
+                  </li>
+
+                  {isAdmin && (
+                    <li>
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileMenuOpen("")}
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                      >
+                        <ShieldIcon className="size-4" />
+                        Admin
+                      </Link>
+                    </li>
+                  )}
+
+                  <li>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen("");
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded"
+                    >
+                      <LogOutIcon className="size-4" />
+                      Logout
+                    </button>
+                  </li>
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
       </nav>
+
+      <ImportJobsModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+      />
     </>
   );
 };

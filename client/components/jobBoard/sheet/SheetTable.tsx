@@ -88,7 +88,7 @@ const SheetTable = ({
 
   return (
     <Table
-      className="mt-8"
+      className="mt-4 sm:mt-8"
       extra={
         <>
           <input

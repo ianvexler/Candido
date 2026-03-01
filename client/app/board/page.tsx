@@ -26,8 +26,10 @@ import { Sheet } from "@/components/ui/Sheet";
 import JobFormSheet from "@/components/jobBoard/JobFormSheet";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
+import { useJobsRefresh } from "@/contexts/JobsRefreshContext";
 
 const BoardPage = () => {
+  const { refreshTrigger } = useJobsRefresh();
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
@@ -79,6 +81,19 @@ const BoardPage = () => {
       initializedRef.current = false;
     };
   }, [showArchived, showRejected]);
+
+  useEffect(() => {
+    if (refreshTrigger === 0) {
+      return;
+    }
+  
+    void getJobBoardEntries()
+      .then((response) => setJobBoardEntries(response.jobBoardEntries))
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to refresh job board");
+      });
+  }, [refreshTrigger]);
 
   const showAccepted = useMemo(() => {
     const hasAcceptedEntries = jobBoardEntries.some((e) => e.status === JobStatus.ACCEPTED);
@@ -308,14 +323,14 @@ const BoardPage = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-[1280px] px-6 pt-12 pb-8 flex flex-col min-h-0 flex-1 overflow-hidden">
-        <div className="flex justify-between items-center shrink-0 px-1">
+      <div className="mx-auto max-w-[1280px] w-full px-4 sm:px-6 pt-4 sm:pt-12 pb-8 flex flex-col min-h-0 flex-1 overflow-hidden">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start shrink-0 min-w-0 px-1">
           <div>
             <Title>Board</Title>
             <Description className="mt-1">Track your job applications</Description>
           </div>
 
-          <div className="flex items-end">
+          <div className="flex items-end w-full min-w-0 sm:w-auto">
             <BoardFilters
               jobBoardEntries={jobBoardEntries}
               searchInput={searchInput}
@@ -336,30 +351,36 @@ const BoardPage = () => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex-1 min-h-0 flex flex-col mt-8">
+          <div className="flex-1 min-h-0 flex flex-col mt-4 sm:mt-8">
             <div
               ref={scrollContainerRef}
               className="flex-1 min-h-0 overflow-auto pb-5"
             >
-            <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-6 [&>div]:first:pl-0 [&>div]:last:pr-0 px-1">
-              {Object.values(JobStatus).map((status: JobStatus) => {
-                if (!showRejected && status === JobStatus.REJECTED) return null;
-                if (!showArchived && status === JobStatus.ARCHIVED) return null;
-                if (!showAccepted && status === JobStatus.ACCEPTED) return null;
+              <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-4 sm:[&>div]:px-6 [&>div]:first:pl-0 [&>div]:last:pr-0 px-1 min-w-max">
+                {Object.values(JobStatus).map((status: JobStatus) => {
+                  if (!showRejected && status === JobStatus.REJECTED) {
+                    return null;
+                  }
+                  if (!showArchived && status === JobStatus.ARCHIVED) {
+                    return null;
+                  }
+                  if (!showAccepted && status === JobStatus.ACCEPTED) {
+                    return null;
+                  }
 
-                return (
-                  <JobBoardColumn
-                    key={status}
-                    status={status}
-                    entries={filteredEntries
-                      .filter((e) => e.status === status)
-                      .sort((a, b) => a.number - b.number)}
-                    onSelectJob={handleSelectJob}
-                    draggedEntryOriginalStatus={draggedEntryOriginalStatus}
-                  />
-                );
-              })}
-            </div>
+                  return (
+                    <JobBoardColumn
+                      key={status}
+                      status={status}
+                      entries={filteredEntries
+                        .filter((e) => e.status === status)
+                        .sort((a, b) => a.number - b.number)}
+                      onSelectJob={handleSelectJob}
+                      draggedEntryOriginalStatus={draggedEntryOriginalStatus}
+                    />
+                  );
+                })}
+              </div>
             </div>
 
             {isDragging && <ActionDropZones showAcceptedZone={draggedFromOffered} />}

@@ -16,8 +16,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
 import JobFormSheet from "@/components/jobBoard/JobFormSheet";
+import { useJobsRefresh } from "@/contexts/JobsRefreshContext";
 
 const SheetPage = () => {
+  const { refreshTrigger } = useJobsRefresh();
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
   const [openAddJobModal, setOpenAddJobModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
@@ -57,6 +59,19 @@ const SheetPage = () => {
       initializedRef.current = false;
     };
   }, [showArchived, showRejected]);
+
+  useEffect(() => {
+    if (refreshTrigger === 0) {
+      return;
+    }
+
+    void getJobBoardEntries()
+      .then((response) => setJobBoardEntries(response.jobBoardEntries))
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to refresh job board");
+      });
+  }, [refreshTrigger]);
 
   const showAccepted = useMemo(() => 
     jobBoardEntries.some((e) => e.status === JobStatus.ACCEPTED),
@@ -127,9 +142,11 @@ const SheetPage = () => {
       try {
         const response = await uploadCVJobBoardEntry(entry.id, undefined, file);
         const updated = { ...entry, ...response.jobBoardEntry };
+
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
         );
+
         setSelectedJob((prev) => (prev?.id === entry.id ? updated : prev));
         toast.success("CV uploaded");
       } catch (error) {
@@ -145,6 +162,7 @@ const SheetPage = () => {
       try {
         const response = await uploadCoverLetterJobBoardEntry(entry.id, undefined, file);
         const updated = { ...entry, ...response.jobBoardEntry };
+
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
         );
@@ -232,8 +250,8 @@ const SheetPage = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-[1200px] w-full px-6 pt-12 pb-8 flex flex-col min-h-0 flex-1">
-        <div className="flex justify-between items-center shrink-0 px-1">
+      <div className="mx-auto max-w-[1200px] w-full px-4 sm:px-6 pt-4 sm:pt-12 pb-8 flex flex-col min-h-0 flex-1 min-w-0">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start shrink-0 min-w-0 px-1">
           <div>
             <Title>Sheet</Title>
             <Description className="mt-1">
@@ -241,7 +259,7 @@ const SheetPage = () => {
             </Description>
           </div>
 
-          <div className="flex items-end">
+          <div className="flex items-end w-full min-w-0 sm:w-auto">
             <BoardFilters
               jobBoardEntries={jobBoardEntries}
               searchInput={searchInput}

@@ -34,8 +34,8 @@ const JobBoardColumn = ({ status, entries, onSelectJob, draggedEntryOriginalStat
   });
 
   return (
-    <div ref={ref} className="flex flex-col gap-4 min-h-0">
-      <Card className="w-[210px]">
+    <div ref={ref} className="flex flex-col gap-4 min-h-0 shrink-0">
+      <Card className="w-[210px] min-w-[210px]">
         <CardContent className="flex justify-between items-center">
           <p className="text-sm font-medium">{capitalize(status.toLowerCase())}</p>
 

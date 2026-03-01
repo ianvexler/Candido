@@ -58,13 +58,13 @@ const BoardFilters = ({
   ].sort(), [jobBoardEntries]);
 
   return (
-    <div className="flex flex-col text-lg">
+    <div className="flex flex-col text-lg min-w-0 w-full">
       <div className="flex items-center gap-1 border-b border-border pb-1 mb-3 px-3">
         <FieldLabel>Filters</FieldLabel>
       </div>
 
-      <div className="flex items-center gap-3 px-3">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3">
+        <div className="flex items-center gap-1 min-w-0 w-full sm:w-auto sm:flex-initial sm:min-w-[200px]">
           <InputGroup>
             <InputGroupAddon align="inline-start">
               <InputGroupText>
@@ -85,7 +85,7 @@ const BoardFilters = ({
               <DropdownMenuTrigger asChild>
                 <Button
                   className={cn(
-                    "px-4 flex w-32",
+                    "px-3 sm:px-4 flex w-24 sm:w-32 shrink-0",
                     tags.length > 0 ? "justify-between" : "justify-center"
                   )}
                   variant="outline"
@@ -138,7 +138,7 @@ const BoardFilters = ({
             <DropdownMenuTrigger asChild>
               <Button
                 className={cn(
-                  "px-4 flex w-29",
+                  "px-3 sm:px-4 flex w-20 sm:w-28 shrink-0",
                   tags.length > 0 ? "justify-between" : "justify-center"
                 )}
                 variant="outline"
@@ -194,7 +194,7 @@ const BoardFilters = ({
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center gap-2 ml-5">
+        <div className="flex items-center gap-2 sm:ml-5">
           <button
             onClick={onToggleRejected}
             className={cn(

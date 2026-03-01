@@ -2,11 +2,9 @@ import { Dialog } from "radix-ui";
 import { Button } from "../ui/Button";
 import { useState, useRef } from "react";
 import { importJobSheet } from "@/lib/helpers/importJobSheet";
-import { JobStatus } from "@/lib/types";
-import { capitalize } from "@/lib/utils";
-import FileAttachment from "../jobBoard/FileAttachment";
 import toast from "react-hot-toast";
 import { updateCurrentUser } from "@/api/resources/users/updateCurrentUser";
+import ImportJobsForm from "./ImportJobsForm";
 
 interface SetupModalProps {
   isOpen: boolean;
@@ -50,15 +48,20 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
+
     if (selectedFile) {
       setFile(selectedFile);
     }
   };
 
   const handleDownload = () => {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
+
     const url = URL.createObjectURL(file);
     const a = document.createElement("a");
+
     a.href = url;
     a.download = file.name;
     a.click();
@@ -115,60 +118,18 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
               </Dialog.Title>
 
               <Dialog.Description asChild>
-                <div className="space-y-5 mt-4">
-                  <p className="text-base text-muted-foreground leading-relaxed">
-                    Upload a spreadsheet (CSV, XLS, or XLSX) with your job data.
-                  </p>
-
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-foreground">Expected format</p>
-                    <code className="block w-full rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground font-mono">
-                      Title, Company, Location, Salary, URL, Status
-                    </code>
-
-                    <div className="space-y-2 mt-4">
-                      <p className="text-sm font-medium text-foreground">
-                        Status must be one of:
-                      </p>
-                      <ul className="flex flex-wrap gap-1.5">
-                        {Object.values(JobStatus).map((status) => (
-                          <li
-                            key={status}
-                            className="inline-flex rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                          >
-                            {capitalize(status.toLowerCase())}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <FileAttachment
-                    label="Spreadsheet"
+                <div>
+                  <ImportJobsForm
                     file={file}
-                    onUpload={handleFileChange}
+                    fileInputRef={fileInputRef}
+                    onFileChange={handleFileChange}
                     onDownload={handleDownload}
                     onDelete={handleDelete}
-                    fileInputRef={fileInputRef}
-                    accept=".xlsx,.xls,.csv"
+                    onImport={handleImportApplications}
+                    onCancel={handleClose}
                   />
                 </div>
               </Dialog.Description>
-
-              <div className="mt-8 flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={handleClose}>
-                  Cancel
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="default"
-                  disabled={!file}
-                  onClick={handleImportApplications}
-                >
-                  Import
-                </Button>
-              </div>
             </>
           )}
         </Dialog.Content>
