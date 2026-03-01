@@ -1,8 +1,8 @@
 name: Deploy to Production
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
@@ -65,7 +65,9 @@ jobs:
               sudo chmod +x /usr/local/bin/docker-compose
             fi
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-            git pull origin main
+            REF=${{ github.event.release.tag_name || 'main' }}
+            git fetch origin
+            git checkout $REF
             cat > server/.env << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
