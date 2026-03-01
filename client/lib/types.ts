@@ -69,3 +69,14 @@ export enum FeedbackType {
   SUGGESTION = 'SUGGESTION',
   OTHER = 'OTHER',
 }
+
+export type FeedbackEntry = {
+  id: number;
+  userId: number;
+  user: User;
+  createdAt: Date;
+  updatedAt: Date;
+  title: string;
+  content: string;
+  type: FeedbackType;
+}
