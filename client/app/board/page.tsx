@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
 import JobFormSheet from "@/components/jobBoard/JobFormSheet";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 
 const BoardPage = () => {
   const [jobBoardEntries, setJobBoardEntries] = useState<JobBoardEntry[]>([]);
@@ -34,7 +35,8 @@ const BoardPage = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFromOffered, setDraggedFromOffered] = useState(false);
   const [draggedEntryOriginalStatus, setDraggedEntryOriginalStatus] = useState<Record<number, JobStatus>>();
-  
+  const [pendingDeleteEntry, setPendingDeleteEntry] = useState<JobBoardEntry | null>(null);
+
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -168,15 +170,25 @@ const BoardPage = () => {
   };
 
   const handleDeleteDrop = (entry: JobBoardEntry) => {
-    void deleteJobBoardEntry(entry.id)
-      .then(() => {
-        setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id));
-        toast.success(`Deleted ${entry.title}`);
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error(`Failed to delete ${entry.title}`);
-      });
+    setPendingDeleteEntry(entry);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteEntry) {
+      return;
+    }
+    const entry = pendingDeleteEntry;
+    setPendingDeleteEntry(null);
+
+    try {
+      await deleteJobBoardEntry(entry.id);
+      setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id));
+      
+      toast.success(`Deleted ${entry.title}`);
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete ${entry.title}`);
+    }
   };
 
   const handleArchiveDrop = (entry: JobBoardEntry) => {
@@ -296,7 +308,7 @@ const BoardPage = () => {
 
   return (
     <>
-      <div className="mx-auto max-w-[1280px] px-6 pt-12 pb-8 flex flex-col min-h-0 flex-1">
+      <div className="mx-auto max-w-[1280px] px-6 pt-12 pb-8 flex flex-col min-h-0 flex-1 overflow-hidden">
         <div className="flex justify-between items-center shrink-0 px-1">
           <div>
             <Title>Board</Title>
@@ -324,10 +336,11 @@ const BoardPage = () => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div
-            ref={scrollContainerRef}
-            className="overflow-x-auto overflow-y-hidden pb-5 mt-8"
-          >
+          <div className="flex-1 min-h-0 flex flex-col mt-8">
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 min-h-0 overflow-auto pb-5"
+            >
             <div className="flex justify-start items-stretch divide-x divide-border [&>div]:px-6 [&>div]:first:pl-0 [&>div]:last:pr-0 px-1">
               {Object.values(JobStatus).map((status: JobStatus) => {
                 if (!showRejected && status === JobStatus.REJECTED) return null;
@@ -347,9 +360,10 @@ const BoardPage = () => {
                 );
               })}
             </div>
-          </div>
+            </div>
 
-          {isDragging && <ActionDropZones showAcceptedZone={draggedFromOffered} />}
+            {isDragging && <ActionDropZones showAcceptedZone={draggedFromOffered} />}
+          </div>
         </DragDropProvider>
 
         {!isDragging && (
@@ -368,6 +382,21 @@ const BoardPage = () => {
         )}
       </div>
 
+      <ConfirmationModal
+        isOpen={!!pendingDeleteEntry}
+        onClose={() => setPendingDeleteEntry(null)}
+        onConfirm={confirmDelete}
+        title="Delete job?"
+        description={
+          pendingDeleteEntry
+            ? `Are you sure you want to delete "${pendingDeleteEntry.title}" at ${pendingDeleteEntry.company}? This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+      />
+
       <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
         {(openAddJobModal || selectedJob) && (
           openAddJobModal ? (
@@ -385,6 +414,7 @@ const BoardPage = () => {
               allEntries={jobBoardEntries}
               onClose={() => handleSheetOpenChange(false)}
               onUpdateJob={onUpdateJob}
+              onDelete={(entry) => setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id))}
             />
           )
         )}

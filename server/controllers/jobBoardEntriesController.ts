@@ -44,13 +44,14 @@ export const updateJobBoardEntry = async (req: Request, res: Response) => {
 };
 
 export const deleteJobBoardEntry = async (req: Request, res: Response) => {
-  const { id } = req.body;
+  const { id } = req.params;
   const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.deleteJobBoardEntry(userId, id);
+  const idNumber = parseInt(id as string);
+  const jobBoardEntry = await jobBoardEntriesService.deleteJobBoardEntry(userId, idNumber);
   return res.status(200).json({ jobBoardEntry });
 };
 

@@ -301,6 +301,7 @@ const SheetPage = () => {
               allEntries={jobBoardEntries}
               onClose={() => handleSheetOpenChange(false)}
               onUpdateJob={onUpdateJob}
+              onDelete={(entry) => setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id))}
             />
           )
         )}

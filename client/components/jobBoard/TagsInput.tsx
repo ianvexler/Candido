@@ -1,5 +1,6 @@
 import { JobBoardEntry } from "@/lib/types";
-import { useState, useMemo, KeyboardEvent } from "react";
+import { useState, useMemo, useEffect, KeyboardEvent } from "react";
+import debounce from "lodash.debounce";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,15 +17,37 @@ interface TagsInputProps {
   onTagsChange: (tags: string[]) => void;
 }
 
-const TagsInput = ({ allEntries, tags, onTagsChange }: TagsInputProps) => {
+const TagsInput = ({ allEntries, tags, onTagsChange }: TagsInputProps) => {  
+  const [newTagInput, setNewTagInput] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+
   const allTags = useMemo(() => {
     const fromEntries = allEntries.flatMap(
       (e) => e.jobBoardTags?.map((t) => t.name) ?? []
     );
     return [...new Set([...fromEntries, ...tags])].sort();
   }, [allEntries, tags]);
+  
+  const debouncedSetFilter = useMemo(() => {
+    return debounce((value: unknown) => setFilterValue(value as string), 300);
+  }, []);
 
-  const [newTagInput, setNewTagInput] = useState("");
+  useEffect(() => {
+    debouncedSetFilter(newTagInput);
+
+    return () => {
+      debouncedSetFilter.cancel();
+    };
+  }, [newTagInput, debouncedSetFilter]);
+
+  const displayedTags = useMemo(() => {
+    const q = filterValue.trim().toLowerCase();
+    if (!q) {
+      return allTags;
+    }
+
+    return allTags.filter((t) => t.toLowerCase().includes(q));
+  }, [allTags, filterValue]);
 
   const handleTagToggle = (tagName: string, checked: boolean) => {
     onTagsChange(
@@ -41,6 +64,8 @@ const TagsInput = ({ allEntries, tags, onTagsChange }: TagsInputProps) => {
   };
 
   const handleNewTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddNewTag();
@@ -101,13 +126,17 @@ const TagsInput = ({ allEntries, tags, onTagsChange }: TagsInputProps) => {
           </button>
         </div>
 
-        {allTags.length === 0 && tags.length === 0 ? (
+        {displayedTags.length === 0 && tags.length === 0 && !newTagInput.trim() ? (
           <div className="px-2 py-3 text-sm text-muted-foreground">
             No tags yet. Type above to create one.
           </div>
+        ) : displayedTags.length === 0 && newTagInput.trim() ? (
+          <div className="px-2 py-3 text-sm text-muted-foreground">
+            No matching tags. Press Add to create &quot;{newTagInput.trim()}&quot;
+          </div>
         ) : (
           <>
-            {allTags.map((tagName) => (
+            {displayedTags.map((tagName) => (
               <DropdownMenuCheckboxItem
                 key={tagName}
                 checked={tags.includes(tagName)}

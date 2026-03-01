@@ -1,4 +1,4 @@
-import { XIcon } from "lucide-react";
+import { XIcon, ArchiveIcon, XCircleIcon, Trash2Icon } from "lucide-react";
 import { VisuallyHidden } from "radix-ui";
 import { SheetContent, SheetTitle } from "../ui/Sheet";
 import { JobBoardEntry, JobStatus, jobStatusColors } from "@/lib/types";
@@ -10,6 +10,7 @@ import InlineInput from "../ui/InlineInput";
 import { SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, Select } from "../ui/select";
 import { createJobBoardEntry } from "@/api/resources/jobBoardEntries/createJobBoardEntry";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
+import { deleteJobBoardEntry } from "@/api/resources/jobBoardEntries/deleteJobBoardEntry";
 import { EditorContent, useEditor } from "@tiptap/react";
 import SimpleMenuBar from "../richEditor/simpleEditor/SimpleMenuBar";
 import { TextStyleKit } from "@tiptap/extension-text-style";
@@ -34,6 +35,7 @@ type JobFormSheetProps =
       allEntries: JobBoardEntry[];
       onClose: () => void;
       onUpdateJob: (job: JobBoardEntry) => void;
+      onDelete?: (entry: JobBoardEntry) => void;
     };
 
 const defaultValues = {
@@ -76,6 +78,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState<boolean>(false);
   const [discardChangesModalOpen, setDiscardChangesModalOpen] = useState<boolean>(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
 
   const isTitleValid = title.trim().length > 0;
   const isCompanyValid = company.trim().length > 0;
@@ -241,18 +244,6 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     setIsConfirmationModalOpen(false);
   };
 
-  const handleViewClick = () => {
-    if (isCreate) {
-      return;
-    }
-
-    if (hasUpdatedFields) {
-      setIsConfirmationModalOpen(true);
-    } else {
-      router.push(`/board/${entry!.id}`);
-    }
-  };
-
   const isCreateFormEqualToDefaults =
     title.trim() === defaultValues.title &&
     company.trim() === defaultValues.company &&
@@ -289,6 +280,69 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     if (success) {
       setDiscardChangesModalOpen(false);
       props.onClose();
+    }
+  };
+
+  const handleStatusAction = async (newStatus: JobStatus) => {
+    if (isCreate || !entry) {
+      return;
+    }
+
+    debouncedSave.cancel();
+    setLoading(true);
+
+    try {
+      const entriesInNewStatus = props.allEntries.filter((e) => e.status === newStatus);
+      const newNumber = entriesInNewStatus.length > 0
+        ? Math.max(...entriesInNewStatus.map((e) => e.number)) + 1
+        : 1;
+
+      const response = await updateJobBoardEntry(
+        entry.id,
+        stateRef.current.title,
+        stateRef.current.company,
+        stateRef.current.location,
+        stateRef.current.salary,
+        stateRef.current.url,
+        stateRef.current.editorHtml,
+        newStatus,
+        newNumber,
+        stateRef.current.tags
+      );
+
+      props.onUpdateJob(response.jobBoardEntry);
+      toast.success(`Moved to ${capitalize(newStatus.toLowerCase())}`);
+      props.onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to move to ${capitalize(newStatus.toLowerCase())}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => setDeleteModalOpen(true);
+
+  const handleConfirmDelete = async () => {
+    if (isCreate || !entry) {
+      return;
+    }
+
+    setDeleteModalOpen(false);
+    debouncedSave.cancel();
+    setLoading(true);
+
+    try {
+      await deleteJobBoardEntry(entry.id);
+
+      props.onDelete?.(entry);
+      toast.success(`Deleted ${entry.title}`);
+      props.onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to delete ${entry.title}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -490,17 +544,49 @@ const JobFormSheet = (props: JobFormSheetProps) => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
           {isCreate ? (
             <Button type="submit" disabled={loading} className="w-fit">
               {loading ? "Creating..." : "Create"}
             </Button>
           ) : (
-            <div className="hidden">
-              <Button type="button" variant="outline" onClick={handleViewClick}>
-                View full entry
-              </Button>
-            </div>
+            <>
+              <div />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={loading}
+                  onClick={() => handleStatusAction(JobStatus.REJECTED)}
+                >
+                  <XCircleIcon className="size-4" />
+                  Rejected
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={loading}
+                  onClick={() => handleStatusAction(JobStatus.ARCHIVED)}
+                >
+                  <ArchiveIcon className="size-4" />
+                  Archive
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={loading}
+                  onClick={handleDeleteClick}
+                >
+                  <Trash2Icon className="size-4" />
+                  Delete
+                </Button>
+              </div>
+            </>
           )}
         </div>
       </form>
@@ -527,6 +613,19 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         confirmLabel={isCreate ? "Create" : "Update"}
         cancelLabel="Discard"
       />
+
+      {!isCreate && entry && (
+        <ConfirmationModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          title="Delete job?"
+          description={`Are you sure you want to delete "${entry.title}" at ${entry.company}? This cannot be undone.`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          variant="destructive"
+        />
+      )}
     </SheetContent>
   );
 };
