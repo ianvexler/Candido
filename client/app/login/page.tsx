@@ -19,6 +19,7 @@ import Logo from "@/lib/images/MainLogo.png";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/common/Loader";
 
 const LoginPage = () => {
   const searchParams = useSearchParams();
@@ -59,8 +60,16 @@ const LoginPage = () => {
     }
   };
 
+  if (loading || isAuthenticated) {
+    return (
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/50 px-4">
+        <Loader size="lg" />
+      </div>
+    );
+  };
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/30 px-4">
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/50 px-4">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
         <p className="mt-1 text-sm text-muted-foreground">Sign in to track your job applications</p>

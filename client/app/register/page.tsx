@@ -60,7 +60,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/30 px-4">
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/50 px-4">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-semibold text-foreground">Get started</h1>
         <p className="mt-1 text-sm text-muted-foreground">Create an account to track your job applications</p>

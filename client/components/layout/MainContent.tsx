@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 
 interface MainContentProps {
@@ -7,14 +8,16 @@ interface MainContentProps {
 }
 
 const MainContent = ({ children }: MainContentProps) => {
+  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
+
   const isLanding = pathname === "/";
   const isBoard = pathname === "/board";
 
   return (
     <div
       className={`flex flex-1 flex-col min-w-0 ${
-        isLanding ? "pl-0 pt-0 min-h-screen overflow-y-auto" : "pl-0 md:pl-18 pt-14 md:pt-0"
+        isLanding ? "pl-0 pt-0 min-h-screen overflow-y-auto" : `pl-0 pt-14 md:pt-0 ${isAuthenticated ? "md:pl-18" : ""}`
       } ${
         isBoard ? "h-screen overflow-hidden" : "min-h-screen overflow-y-auto"
       }`}
