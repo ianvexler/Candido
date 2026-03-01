@@ -11,6 +11,7 @@ import { AxiosError, HttpStatusCode } from "axios";
 import { redirect, usePathname } from "next/navigation";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import SetupModal from "@/components/common/SetupModal";
 
 type AuthContextType = {
   user: User | null;
@@ -31,10 +32,12 @@ export const useAuth = () => {
 };
 
 const permittedRoutes = ['/', '/login', '/register', '/verify'];
+const setupModalExcludedRoutes = ['/login', '/register', '/verify'];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const [openSetupModal, setOpenSetupModal] = useState<boolean>(false);
 
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
@@ -92,6 +95,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
   }, [isPermittedRoute, setUser, clearSession, handleUnauthorized]);
 
+  useEffect(() => {
+    const shouldShow =
+      isAuthenticated &&
+      !user?.setupCompleted &&
+      !setupModalExcludedRoutes.includes(pathname ?? "");
+
+    if (shouldShow) {
+      queueMicrotask(() => setOpenSetupModal(true));
+    } else {
+      queueMicrotask(() => setOpenSetupModal(false));
+    }
+  }, [isAuthenticated, user?.setupCompleted, pathname]);
+
   const value = {
     user,
     isAuthenticated,
@@ -111,6 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ) : (
         children
       )}
+
+      <SetupModal isOpen={openSetupModal} onClose={() => setOpenSetupModal(false)} />
     </AuthContext.Provider>
   );
 };

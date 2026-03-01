@@ -62,7 +62,7 @@ const VerifyPage = () => {
         </CardHeader>
 
         <CardContent className="mt-6 mb-6 px-6">
-          <CardTitle className="text-lg">
+          <CardTitle className="text-lg text-center">
             {status === "loading" && "Please wait"}
             {status === "success" && "Verified successfully"}
             {status === "error" && "Verification failed"}

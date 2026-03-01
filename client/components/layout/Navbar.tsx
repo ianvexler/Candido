@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
-import { HomeIcon, KanbanIcon, LogOutIcon, SheetIcon, UserIcon } from "lucide-react";
+import { HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
@@ -49,8 +49,8 @@ const Navbar = () => {
         </nav>
 
         <div className="flex flex-col items-center justify-center gap-3">
-          <Link href="/profile" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/profile")}`}>
-            <UserIcon className="size-5" />
+          <Link href="/settings" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/settings")}`}>
+            <SettingsIcon className="size-5" />
           </Link>
 
           <button

@@ -3,12 +3,12 @@ import Description from "@/components/common/Description";
 import PageContainer from "@/components/common/PageContainer";
 import Title from "@/components/common/Title";
 
-const ProfilePage = () => {
+const SettingsPage = () => {
   return (
     <PageContainer>
       <div>
-        <Title>Profile</Title>
-        <Description className="mt-1">Manage your profile and settings</Description>
+        <Title>Settings</Title>
+        <Description className="mt-1">Manage your preferences and account</Description>
       </div>
 
       <ComingSoon />
@@ -16,4 +16,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default SettingsPage;

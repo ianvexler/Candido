@@ -8,6 +8,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", jobBoardEntriesController.getJobBoardEntries);
+router.post("/import", jobBoardEntriesController.bulkImportJobBoardEntries);
 router.get("/:id", jobBoardEntriesController.getJobBoardEntry);
 router.post("/", jobBoardEntriesController.createJobBoardEntry);
 router.put("/:id", jobBoardEntriesController.updateJobBoardEntry);

@@ -30,7 +30,11 @@ export const jobBoardEntriesService = {
   },
 
   async createJobBoardEntry(userId: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus = JobStatus.PENDING) {
-    const number = await prisma.jobBoardEntry.count({ where: { userId, status } });
+    const { _max } = await prisma.jobBoardEntry.aggregate({
+      where: { userId, status },
+      _max: { number: true },
+    });
+    const number = ((_max?.number ?? 0) + 1);
 
     return await prisma.jobBoardEntry.create({
       data: {
@@ -41,8 +45,53 @@ export const jobBoardEntriesService = {
         salary,
         url,
         description,
+        status,
         number: number + 1,
       },
+    });
+  },
+
+  async bulkImportJobBoardEntries(
+    userId: number,
+    entries: { title: string; company: string; location?: string; salary?: string; url?: string; description?: string; status: JobStatus }[]
+  ) {
+    return await prisma.$transaction(async (tx) => {
+      const created: Awaited<ReturnType<typeof tx.jobBoardEntry.create>>[] = [];
+      const statusMaxNumber = new Map<JobStatus, number>();
+
+      for (const entry of entries) {
+        const status = entry.status ?? JobStatus.PENDING;
+        let nextNumber: number;
+
+        if (statusMaxNumber.has(status)) {
+          nextNumber = statusMaxNumber.get(status)! + 1;
+        } else {
+          const { _max } = await tx.jobBoardEntry.aggregate({
+            where: { userId, status },
+            _max: { number: true },
+          });
+
+          nextNumber = ((_max?.number ?? 0) + 1);
+        }
+        statusMaxNumber.set(status, nextNumber);
+
+        const createdEntry = await tx.jobBoardEntry.create({
+          data: {
+            userId,
+            title: entry.title,
+            company: entry.company,
+            location: entry.location ?? "",
+            salary: entry.salary ?? "",
+            url: entry.url ?? "",
+            description: entry.description ?? "",
+            status,
+            number: nextNumber,
+          },
+        });
+        created.push(createdEntry);
+      }
+
+      return created;
     });
   },
 
@@ -125,7 +174,7 @@ export const jobBoardEntriesService = {
   },
 
   async deleteJobBoardEntry(userId: number, id: number) {
-    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id }});
+    const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id } });
 
     if (!currentEntry) {
       throw createHttpError(404, "Job board entry not found");
@@ -135,7 +184,25 @@ export const jobBoardEntriesService = {
       throw createHttpError(403, "You are not authorized to delete this job board entry");
     }
 
-    return await prisma.jobBoardEntry.delete({ where: { id }});
+    const { status, number: deletedNumber } = currentEntry;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.jobBoardEntry.delete({ where: { id } });
+
+      const entriesToRenumber = await tx.jobBoardEntry.findMany({
+        where: { userId, status, number: { gt: deletedNumber } },
+        orderBy: { number: "asc" },
+      });
+
+      for (const [i, entry] of entriesToRenumber.entries()) {
+        await tx.jobBoardEntry.update({
+          where: { id: entry.id },
+          data: { number: deletedNumber + i },
+        });
+      }
+    });
+
+    return currentEntry;
   },
 
   async uploadCv(userId: number, id: number, cvText?: string, cvFile?: Express.Multer.File) {

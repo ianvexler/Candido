@@ -32,6 +32,22 @@ export const createJobBoardEntry = async (req: Request, res: Response) => {
   return res.status(200).json({ jobBoardEntry });
 };
 
+export const bulkImportJobBoardEntries = async (req: Request, res: Response) => {
+  const { entries } = req.body;
+  const userId = req.user!.id;
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).json({ error: "Entries array is required and must not be empty" });
+  }
+
+  const jobBoardEntries = await jobBoardEntriesService.bulkImportJobBoardEntries(userId, entries);
+  return res.status(200).json({ jobBoardEntries });
+};
+
 export const updateJobBoardEntry = async (req: Request, res: Response) => {
   const { id, title, company, location, salary, url, description, status, number, tagNames } = req.body;
   const userId = req.user!.id;

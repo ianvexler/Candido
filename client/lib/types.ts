@@ -3,6 +3,7 @@ export type User = {
   email: string;
   name: string;
   sessions: Session[];
+  setupCompleted: boolean;
 }
 
 export type Session = {
