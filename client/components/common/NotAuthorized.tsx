@@ -1,18 +1,18 @@
 import Image from "next/image";
 import Police from "@/lib/images/Police.png";
 
-interface UnauthorizedProps {
+interface NotAuthorizedProps {
   title?: string;
   description?: string;
 }
 
-const Unauthorized = ({
+const NotAuthorized = ({
   title = "Unauthorized",
   description = "Stop there! You are not authorized to access this page.",
-}: UnauthorizedProps) => {
+}: NotAuthorizedProps) => {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
-      <div className="flex flex-col items-center gap-6 text-center mt-15">
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center bg-muted/30 px-4">
+      <div className="flex flex-col items-center gap-6 text-center">
         <Image
           src={Police}
           alt="Unauthorized"
@@ -30,4 +30,4 @@ const Unauthorized = ({
   );
 };
 
-export default Unauthorized;
+export default NotAuthorized;

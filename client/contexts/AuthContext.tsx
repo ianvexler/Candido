@@ -16,6 +16,7 @@ import SetupModal from "@/components/common/SetupModal";
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   handleLogin: (email: string, password: string) => Promise<void>;
   handleLogout: () => Promise<void>;
   handleRegister: (email: string, password: string, name: string) => Promise<void>;
@@ -69,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [clearSession]);
 
   const isAuthenticated = !!user;
+  const isAdmin = user?.admin || false;
 
   useEffect(() => {
     if (isPermittedRoute) {
@@ -111,6 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     user,
     isAuthenticated,
+    isAdmin,
     handleLogin,
     handleLogout,
     handleRegister

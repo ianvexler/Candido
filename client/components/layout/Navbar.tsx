@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/lib/images/SmallLogo.png";
-import { HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon } from "lucide-react";
+import { HomeIcon, KanbanIcon, LogOutIcon, SettingsIcon, SheetIcon, ShieldIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
@@ -14,7 +14,7 @@ const navLinks = [
 ];
 
 const Navbar = () => {
-  const { isAuthenticated, handleLogout } = useAuth();
+  const { isAuthenticated, isAdmin, handleLogout } = useAuth();
   const pathname = usePathname();
   
   const linkClass = (href: string) =>
@@ -52,6 +52,12 @@ const Navbar = () => {
           <Link href="/settings" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/settings")}`}>
             <SettingsIcon className="size-5" />
           </Link>
+
+          {isAdmin && (
+            <Link href="/admin" className={`flex size-12 items-center justify-center rounded-lg transition-colors ${linkClass("/admin")}`}>
+              <ShieldIcon className="size-5" />
+            </Link>
+          )}
 
           <button
             onClick={() => handleLogout()}

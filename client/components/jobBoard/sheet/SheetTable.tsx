@@ -18,6 +18,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { Button } from "@/components/ui/Button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableColGroup,
+  TableCol,
+  TableHeaderRow,
+  TableEmpty,
+} from "@/components/ui/Table";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { capitalize } from "@/lib/utils";
@@ -75,66 +87,82 @@ const SheetTable = ({
   };
 
   return (
-    <div className="mt-8 overflow-x-auto border border-border rounded-lg">
-      <table className="w-full min-w-[900px] text-sm table-fixed">
-        <colgroup>
-          <col className="w-[2%]" />
-          <col className="w-[18%]" />
-          <col className="w-[11%]" />
-          <col className="w-[11%]" />
-          <col className="w-[13%]" />
-          <col className="w-[22%]" />
-          <col className="w-[15%]" />
-          <col className="w-[10%]" />
-        </colgroup>
+    <Table
+      className="mt-8"
+      extra={
+        <>
+          <input
+            ref={cvInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handleCvInputChange}
+          />
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handleCoverInputChange}
+          />
+          {entries.length === 0 && (
+            <TableEmpty>No applications match your filters</TableEmpty>
+          )}
+        </>
+      }
+    >
+        <TableColGroup>
+          <TableCol className="w-[2%]" />
+          <TableCol className="w-[18%]" />
+          <TableCol className="w-[11%]" />
+          <TableCol className="w-[11%]" />
+          <TableCol className="w-[13%]" />
+          <TableCol className="w-[22%]" />
+          <TableCol className="w-[15%]" />
+          <TableCol className="w-[10%]" />
+        </TableColGroup>
 
-        <thead>
-          <tr className="border-b border-border bg-muted/50">
-            <th className="text-left px-3 py-3 font-medium" aria-label="Status color" />
-            <th className="text-left px-4 py-3 font-medium">Title</th>
-            <th className="text-left px-4 py-3 font-medium">Company</th>
-            <th className="text-left px-4 py-3 font-medium">Location</th>
-            <th className="text-left px-4 py-3 font-medium">Status</th>
-            <th className="text-left px-4 py-3 font-medium">Tags</th>
-            <th className="text-left px-4 py-3 font-medium">Attachments</th>
-            <th className="text-left px-4 py-3 font-medium">Date</th>
-          </tr>
-        </thead>
+        <TableHeader>
+          <TableHeaderRow>
+            <TableHead variant="compact" aria-label="Status color" />
+            <TableHead>Title</TableHead>
+            <TableHead>Company</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Tags</TableHead>
+            <TableHead>Attachments</TableHead>
+            <TableHead>Date</TableHead>
+          </TableHeaderRow>
+        </TableHeader>
 
-        <tbody>
+        <TableBody>
           {entries.map((entry) => (
-            <tr
+            <TableRow
               key={entry.id}
               onClick={() => onSelectJob(entry)}
-              className="border-b border-border hover:bg-muted/30 cursor-pointer transition-colors"
+              interactive
             >
-              <td className="px-3 py-3 w-10">
+              <TableCell className="px-3 py-3 w-10">
                 <div
                   className={`shrink-0 w-3 h-3 rounded-sm ${jobStatusColors[entry.status]}`}
                   title={entry.status.toLowerCase()}
                   aria-hidden
                 />
-              </td>
+              </TableCell>
 
-              <td className="px-4 py-3 font-medium min-w-0">
-                <span className="block truncate" title={entry.title}>
-                  {entry.title}
-                </span>
-              </td>
+              <TableCell truncate truncateTitle={entry.title} className="font-medium">
+                {entry.title}
+              </TableCell>
 
-              <td className="px-4 py-3 text-muted-foreground min-w-0">
-                <span className="block truncate" title={entry.company}>
-                  {entry.company}
-                </span>
-              </td>
+              <TableCell truncate truncateTitle={entry.company} muted>
+                {entry.company}
+              </TableCell>
 
-              <td className="px-4 py-3 text-muted-foreground min-w-0">
-                <span className="block truncate" title={entry.location || undefined}>
-                  {entry.location || "—"}
-                </span>
-              </td>
+              <TableCell truncate truncateTitle={entry.location || undefined} muted>
+                {entry.location || "—"}
+              </TableCell>
 
-              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <Select
                   value={entry.status}
                   onValueChange={(v) => onStatusChange(entry, v as JobStatus)}
@@ -152,17 +180,19 @@ const SheetTable = ({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-              </td>
+              </TableCell>
 
-              <td className="px-4 py-3 text-muted-foreground min-w-0">
-                <span className="block truncate" title={entry.jobBoardTags?.length ? entry.jobBoardTags.map((t) => t.name).join(", ") : undefined}>
-                  {entry.jobBoardTags?.length
-                    ? entry.jobBoardTags.map((t) => t.name).join(", ")
-                    : "—"}
-                </span>
-              </td>
+              <TableCell
+                truncate
+                truncateTitle={entry.jobBoardTags?.length ? entry.jobBoardTags.map((t) => t.name).join(", ") : undefined}
+                muted
+              >
+                {entry.jobBoardTags?.length
+                  ? entry.jobBoardTags.map((t) => t.name).join(", ")
+                  : "—"}
+              </TableCell>
 
-              <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex flex-wrap gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -251,39 +281,17 @@ const SheetTable = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </td>
+              </TableCell>
 
-              <td className="px-4 py-3 text-muted-foreground">
+              <TableCell muted>
                 {entry.createdAt
                   ? format(new Date(entry.createdAt), "MMM d, yyyy")
                   : "—"}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-
-      <input
-        ref={cvInputRef}
-        type="file"
-        accept="application/pdf"
-        className="hidden"
-        onChange={handleCvInputChange}
-      />
-      <input
-        ref={coverInputRef}
-        type="file"
-        accept="application/pdf"
-        className="hidden"
-        onChange={handleCoverInputChange}
-      />
-
-      {entries.length === 0 && (
-        <div className="py-12 text-center text-muted-foreground text-sm">
-          No applications match your filters
-        </div>
-      )}
-    </div>
+        </TableBody>
+    </Table>
   );
 };
 

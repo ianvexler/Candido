@@ -7,5 +7,6 @@ const router = Router();
 router.use(requireAuth);
 
 router.put("/", userController.updateUser);
+router.get("/", userController.getUsers);
 
 export default router;

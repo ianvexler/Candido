@@ -25,6 +25,11 @@ export const sessionsService = {
       throw createHttpError(401, "Invalid email or password");
     }
 
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     return user;
   },
 
@@ -32,13 +37,20 @@ export const sessionsService = {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = addDays(new Date(), 30);
 
-    return prisma.session.create({
+    const session = await prisma.session.create({
       data: {
         userId,
         token,
         expiresAt,
       },
     });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { lastLoginAt: new Date() },
+    });
+
+    return session;
   },
 
   async deleteSession(token: string) {
@@ -47,11 +59,22 @@ export const sessionsService = {
     });
   },
 
-  async findSession(token: string) {
-    return prisma.session.findUnique({
+  async findSession(token: string) {    
+    const session = await prisma.session.findUnique({
       where: { token },
       include: { user: true },
     });
+
+    if (!session || session.expiresAt < new Date()) {
+      throw createHttpError(401, "Invalid or expired session");
+    }
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    return session;
   },
 
   async register(email: string, password: string, name: string) {

@@ -4,6 +4,8 @@ export type User = {
   name: string;
   sessions: Session[];
   setupCompleted: boolean;
+  admin: boolean;
+  lastLoginAt: Date;
 }
 
 export type Session = {

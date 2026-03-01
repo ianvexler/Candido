@@ -16,6 +16,8 @@ model User {
   verificationToken     String?
   verificationExpiresAt DateTime?
   setupCompleted        Boolean   @default(false)
+  admin                 Boolean   @default(false)
+  lastLoginAt           DateTime?
 
   jobBoardEntries       JobBoardEntry[]
   jobBoardTags          JobBoardTag[]
