@@ -80,7 +80,7 @@ const LandingPage = () => {
           aria-hidden
         />
         <div className="relative bg-linear-to-b from-[#1a1a1a] via-[#222222] to-[#1a1a1a] px-6 pt-16 sm:pt-20">
-          <div className="flex justify-between items-end">
+          <div className="mx-auto flex max-w-7xl justify-between items-end">
             <div className="flex flex-1 flex-col items-center text-center h-full pb-24 md:pb-20">
               <div className="relative inline-flex">
                 <div
