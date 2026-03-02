@@ -1,7 +1,8 @@
 import { Dialog } from "radix-ui";
 import { Button } from "../ui/Button";
 import { useState, useRef } from "react";
-import { importJobSheet } from "@/lib/helpers/importJobSheet";
+import { parseJobSheet } from "@/lib/helpers/importJobSheet";
+import { bulkImportJobBoardEntries } from "@/api/resources/jobBoardEntries/bulkImportJobBoardEntries";
 import toast from "react-hot-toast";
 import { updateCurrentUser } from "@/api/resources/users/updateCurrentUser";
 import ImportJobsForm from "./ImportJobsForm";
@@ -14,6 +15,9 @@ interface SetupModalProps {
 const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
   const [stage, setStage] = useState<"intro" | "import">("intro");
   const [file, setFile] = useState<File | null>(null);
+  const [previewEntries, setPreviewEntries] = useState<Awaited<ReturnType<typeof parseJobSheet>> | null>(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClose = async () => {
@@ -24,21 +28,42 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
     }
     onClose();
   };
-  
-  const handleImportApplications = async () => {
+
+  const handlePreview = async () => {
     if (!file) {
-      toast.error("Please select a file");
+      return;
+    }
+
+    setIsPreviewing(true);
+    setPreviewEntries(null);
+
+    try {
+      const entries = await parseJobSheet(file);
+      setPreviewEntries(entries);
+
+      if (entries.length === 0) {
+        toast.error("No valid job entries found in spreadsheet");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to parse spreadsheet");
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const handleImportApplications = async () => {
+    if (!previewEntries || previewEntries.length === 0) {
       return;
     }
 
     try {
-      const count = await importJobSheet(file);
-      toast.success(`Imported ${count} job${count === 1 ? "" : "s"}`);
+      await bulkImportJobBoardEntries(previewEntries);
+      toast.success(`Imported ${previewEntries.length} job${previewEntries.length === 1 ? "" : "s"}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to import job applications");
     }
-
     handleClose();
   };
 
@@ -48,9 +73,9 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-
     if (selectedFile) {
       setFile(selectedFile);
+      setPreviewEntries(null);
     }
   };
 
@@ -70,6 +95,7 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
 
   const handleDelete = () => {
     setFile(null);
+    setPreviewEntries(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -79,7 +105,7 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
         <Dialog.Overlay className="fixed inset-0 z-100 bg-black/50" />
 
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-101 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-background p-10 shadow-lg"
+          className="fixed left-1/2 top-1/2 z-101 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-background p-10 shadow-lg"
           onPointerDownOutside={handleClose}
           onEscapeKeyDown={handleClose}
         >
@@ -122,11 +148,14 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
                   <ImportJobsForm
                     file={file}
                     fileInputRef={fileInputRef}
+                    previewEntries={previewEntries}
                     onFileChange={handleFileChange}
                     onDownload={handleDownload}
                     onDelete={handleDelete}
+                    onPreview={handlePreview}
                     onImport={handleImportApplications}
                     onCancel={handleClose}
+                    isPreviewing={isPreviewing}
                   />
                 </div>
               </Dialog.Description>
