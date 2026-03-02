@@ -7,6 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  REF: ${{ github.event.release.tag_name || github.ref_name }}
 
 jobs:
   build:
@@ -17,6 +18,9 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF }}
+          fetch-depth: 0
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -31,7 +35,10 @@ jobs:
           context: ./client
           file: ./client/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-client:latest
+          no-cache: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-client:${{ env.REF }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-client:latest
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 
@@ -41,7 +48,10 @@ jobs:
           context: ./server
           file: ./server/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-server:latest
+          no-cache: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-server:${{ env.REF }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-server:latest
           build-args: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
 
@@ -49,6 +59,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -59,15 +72,26 @@ jobs:
           host_key_checking: false
           command_timeout: 5m
           script: |
+            set -euo pipefail
+
             cd ${{ secrets.EC2_APP_PATH }}
+
             if ! command -v docker-compose &> /dev/null; then
               sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
+
             git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-            REF=${{ github.event.release.tag_name || 'main' }}
-            git fetch origin
-            git checkout $REF
+            REF='${{ env.REF }}'
+            git fetch --prune --tags origin
+
+            if git show-ref --verify --quiet "refs/tags/$REF"; then
+              git checkout "tags/$REF"
+            else
+              git checkout "$REF"
+              git reset --hard "origin/$REF"
+            fi
+
             cat > server/.env << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
@@ -80,6 +104,11 @@ jobs:
             BREVO_SMTP_LOGIN=${{ secrets.BREVO_SMTP_LOGIN }}
             BREVO_SMTP_KEY=${{ secrets.BREVO_SMTP_KEY }}
             ENVEOF
+            chmod 600 server/.env
+
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            export IMAGE_TAG="$REF"
+
             docker-compose -f docker-compose.prod.yml --env-file server/.env pull
-            docker-compose -f docker-compose.prod.yml --env-file server/.env up -d
+            docker-compose -f docker-compose.prod.yml --env-file server/.env up -d --force-recreate
