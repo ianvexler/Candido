@@ -25,6 +25,9 @@ const SheetPage = () => {
   const [selectedJob, setSelectedJob] = useState<JobBoardEntry>();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<JobStatus[]>([]);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -49,10 +52,18 @@ const SheetPage = () => {
     initializedRef.current = true;
 
     void getJobBoardEntries()
-      .then((response) => setJobBoardEntries(response.jobBoardEntries))
+      .then((response) => {
+        setIsLoading(true);
+
+        setJobBoardEntries(response.jobBoardEntries);
+        setIsEmpty(response.isEmpty);
+      })
       .catch((error) => {
         console.error(error);
         toast.error("Failed to get job board entries");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
 
     return () => {
@@ -117,7 +128,10 @@ const SheetPage = () => {
   }, []);
 
   const handleSelectJob = useCallback((job: JobBoardEntry) => {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+
     setOpenAddJobModal(false);
     setSelectedJob(job);
     setIsSheetOpen(true);
@@ -280,12 +294,14 @@ const SheetPage = () => {
 
         <SheetTable
           entries={sortedEntries}
+          isEmpty={isEmpty}
           onSelectJob={handleSelectJob}
           onStatusChange={handleStatusChange}
           onCvUpload={handleCvUpload}
           onCoverLetterUpload={handleCoverLetterUpload}
           onCvDownload={handleCvDownload}
           onCoverLetterDownload={handleCoverLetterDownload}
+          isLoading={isLoading}
         />
 
         <button

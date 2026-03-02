@@ -33,41 +33,54 @@ import {
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { capitalize } from "@/lib/utils";
+import Spy from "@/lib/images/Spy.png";
+import Restock from "@/lib/images/Restock.png";
+import Image from "next/image";
+import Loader from "@/components/common/Loader";
 
 interface SheetTableProps {
   entries: JobBoardEntry[];
+  isEmpty: boolean;
   onSelectJob: (job: JobBoardEntry) => void;
   onStatusChange: (entry: JobBoardEntry, newStatus: JobStatus) => void;
   onCvUpload: (entry: JobBoardEntry, file: File) => Promise<void>;
   onCoverLetterUpload: (entry: JobBoardEntry, file: File) => Promise<void>;
   onCvDownload: (entry: JobBoardEntry) => void;
   onCoverLetterDownload: (entry: JobBoardEntry) => void;
+  isLoading: boolean;
 }
 
 const SheetTable = ({
   entries,
+  isEmpty,
   onSelectJob,
   onStatusChange,
   onCvUpload,
   onCoverLetterUpload,
   onCvDownload,
   onCoverLetterDownload,
+  isLoading,
 }: SheetTableProps) => {
   const [pendingCvEntryId, setPendingCvEntryId] = useState<number | null>(null);
   const [pendingCoverEntryId, setPendingCoverEntryId] = useState<number | null>(null);
+
   const cvInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleCvInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const entry = entries.find((x) => x.id === pendingCvEntryId);
     setPendingCvEntryId(null);
-    if (!entry) return;
+    if (!entry) {
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file || file.type !== "application/pdf") {
       toast.error("Please upload a PDF file");
       e.target.value = "";
       return;
     }
+
     await onCvUpload(entry, file);
     e.target.value = "";
   };
@@ -75,13 +88,17 @@ const SheetTable = ({
   const handleCoverInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const entry = entries.find((x) => x.id === pendingCoverEntryId);
     setPendingCoverEntryId(null);
-    if (!entry) return;
+    if (!entry) {
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file || file.type !== "application/pdf") {
       toast.error("Please upload a PDF file");
       e.target.value = "";
       return;
     }
+
     await onCoverLetterUpload(entry, file);
     e.target.value = "";
   };
@@ -106,7 +123,23 @@ const SheetTable = ({
             onChange={handleCoverInputChange}
           />
           {entries.length === 0 && (
-            <TableEmpty>No applications match your filters</TableEmpty>
+            <TableEmpty>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center gap-5 py-10">
+                  <Loader />
+                </div>
+              ) : isEmpty ? (
+                <div className="flex flex-col items-center justify-center gap-5 py-10">
+                  <Image src={Restock} alt="Restock" width={200} height={200} />
+                  <p className="text-base text-muted-foreground">You haven&apos;t added any applications yet. Start organizing them today!</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-5 py-10">
+                  <Image src={Spy} alt="Restock" width={200} height={200} />
+                  <p className="text-base text-muted-foreground">We could not find any applications matching your filters.</p>
+                </div>
+              )}
+            </TableEmpty>
           )}
         </>
       }

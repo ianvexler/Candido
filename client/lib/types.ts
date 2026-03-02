@@ -81,3 +81,23 @@ export type FeedbackEntry = {
   content: string;
   type: FeedbackType;
 }
+
+export type JobBoardEntriesStats = {
+  counts: {
+    total: number;
+    pending: number;
+    applied: number;
+    assessment: number;
+    interview: number;
+    offered: number;
+    accepted: number;
+    rejected: number;
+  };
+  thisWeek: number;
+  lastWeek: number;
+  responseRate: number;
+  topTags: {
+    name: string;
+    count: number;
+  }[];
+};

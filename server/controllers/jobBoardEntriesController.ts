@@ -8,7 +8,10 @@ export const getJobBoardEntries = async (req: Request, res: Response) => {
   }
 
   const jobBoardEntries = await jobBoardEntriesService.getJobBoardEntries(userId);
-  return res.status(200).json({ jobBoardEntries });
+  return res.status(200).json({ 
+    jobBoardEntries,
+    isEmpty: jobBoardEntries.length === 0,
+  });
 };
 
 export const getJobBoardEntry = async (req: Request, res: Response) => {
@@ -111,4 +114,14 @@ export const uploadCoverLetter = async (req: Request, res: Response) => {
   );
 
   return res.status(200).json({ jobBoardEntry });
+};
+
+export const getJobBoardEntryStats = async (req: Request, res: Response) => {
+  const userId = req.user!.id;
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  const jobBoardEntryStats = await jobBoardEntriesService.getJobBoardEntryStats(userId);
+  return res.status(200).json(jobBoardEntryStats);
 };

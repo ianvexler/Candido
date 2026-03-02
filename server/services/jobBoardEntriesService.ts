@@ -1,4 +1,5 @@
 import { JobStatus } from "@/generated/prisma/enums.js";
+import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { prisma } from "../lib/prisma.js";
 import createHttpError from "http-errors";
 import storageService from "./storageServices.js";
@@ -305,5 +306,82 @@ export const jobBoardEntriesService = {
         },
       });
     }
+  },
+
+  async getJobBoardEntryStats(userId: number) {
+    const grouped = await prisma.jobBoardEntry.groupBy({
+      by: ['status'],
+      where: { userId },
+      _count: { status: true },
+    });
+    
+    const countsByStatus = Object.fromEntries(
+      grouped.map((g) => [g.status, g._count.status])
+    );
+    
+    const counts = {
+      total: grouped.reduce((sum, g) => sum + g._count.status, 0),
+      pending: countsByStatus[JobStatus.PENDING] ?? 0,
+      applied: countsByStatus[JobStatus.APPLIED] ?? 0,
+      assessment: countsByStatus[JobStatus.ASSESSMENT] ?? 0,
+      interview: countsByStatus[JobStatus.INTERVIEW] ?? 0,
+      offered: countsByStatus[JobStatus.OFFERED] ?? 0,
+      rejected: countsByStatus[JobStatus.REJECTED] ?? 0,
+      accepted: countsByStatus[JobStatus.ACCEPTED] ?? 0,
+    };
+
+    const now = new Date();
+    const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const lastWeekStart = subWeeks(thisWeekStart, 1);
+    const lastWeekEnd = endOfWeek(lastWeekStart, { weekStartsOn: 1 });
+
+    const [thisWeek, lastWeek] = await Promise.all([
+      prisma.jobBoardEntry.count({
+        where: {
+          userId,
+          createdAt: { gte: thisWeekStart, lte: now },
+        },
+      }),
+      prisma.jobBoardEntry.count({
+        where: {
+          userId,
+          createdAt: { gte: lastWeekStart, lte: lastWeekEnd },
+        },
+      }),
+    ]);
+
+    const responseRate = await prisma.jobBoardEntry.aggregate({
+      where: {
+        userId, status: {
+          not: { in: [JobStatus.PENDING, JobStatus.APPLIED, JobStatus.ARCHIVED] }
+        }
+      },
+      _count: true,
+    });
+
+    const allEntriesCount = await prisma.jobBoardEntry.count({ where: { userId } });
+
+    const topTags = await prisma.jobBoardTag.findMany({
+      where: { userId },
+      include: {
+        _count: {
+          select: { jobBoardEntries: true }
+        }
+      },
+      orderBy: {
+        jobBoardEntries: {
+          _count: 'desc'
+        }
+      },
+      take: 5
+    });
+
+    return {
+      counts,
+      lastWeek,
+      thisWeek,
+      responseRate: allEntriesCount === 0 ? 0 : Math.round(responseRate._count / allEntriesCount * 100),
+      topTags: topTags,
+    };
   },
 };

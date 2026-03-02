@@ -9,8 +9,9 @@ router.use(requireAuth);
 
 router.get("/", jobBoardEntriesController.getJobBoardEntries);
 router.post("/import", jobBoardEntriesController.bulkImportJobBoardEntries);
-router.get("/:id", jobBoardEntriesController.getJobBoardEntry);
 router.post("/", jobBoardEntriesController.createJobBoardEntry);
+router.get("/stats", jobBoardEntriesController.getJobBoardEntryStats);
+router.get("/:id", jobBoardEntriesController.getJobBoardEntry);
 router.put("/:id", jobBoardEntriesController.updateJobBoardEntry);
 router.delete("/:id", jobBoardEntriesController.deleteJobBoardEntry);
 router.post("/:id/cv", uploadMiddleware, jobBoardEntriesController.uploadCv);
