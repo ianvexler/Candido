@@ -21,6 +21,17 @@ export const userService = {
       throw createHttpError(403, "You are not authorized to access this resource");
     }
 
-    return await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      include: {
+        _count: {
+          select: { jobBoardEntries: true }
+        }
+      }
+    });
+
+    return users.map(({ _count, ...user }) => ({
+      ...user,
+      jobBoardEntriesCount: _count.jobBoardEntries
+    }));
   },
 };

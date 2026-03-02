@@ -2,10 +2,11 @@ export type User = {
   id: number;
   email: string;
   name: string;
-  sessions: Session[];
+  sessions?: Session[];
   setupCompleted: boolean;
   admin: boolean;
   lastLoginAt: Date;
+  jobBoardEntriesCount?: number;
 }
 
 export type Session = {

@@ -166,6 +166,7 @@ const LandingPage = () => {
                         {feature.title}
                       </h3>
                     </div>
+
                     <p className="mt-4 text-muted-foreground leading-relaxed">
                       {feature.description}
                     </p>
