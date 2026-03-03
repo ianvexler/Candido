@@ -20,6 +20,9 @@ import ConfirmationModal from "../common/ConfirmationModal";
 import SheetFileInputs from "./sheet/SheetFileInputs";
 import TagsInput from "./TagsInput";
 import { Button } from "../ui/Button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/Tabs";
+import NotesArea from "./NotesArea";
+import type { Note } from "@/lib/types";
 
 type JobFormSheetProps =
   | {
@@ -36,6 +39,9 @@ type JobFormSheetProps =
       onClose: () => void;
       onUpdateJob: (job: JobBoardEntry) => void;
       onDelete?: (entry: JobBoardEntry) => void;
+      notes: Note[];
+      notesLoading: boolean;
+      onNoteAdded: (note: Note) => void;
     };
 
 const defaultValues = {
@@ -352,7 +358,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     const success = await performCreate();
     if (success) props.onClose();
   };
-
+  
   return (
     <SheetContent
       showCloseButton={false}
@@ -534,14 +540,28 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         )}
 
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Description
-          </h3>
+          <Tabs defaultValue="description" className="w-full">
+            <TabsList>
+              <TabsTrigger value="description" className="px-4">Description</TabsTrigger>
+              <TabsTrigger value="notes" className="px-4" disabled={isCreate}>Notes</TabsTrigger>
+            </TabsList>
 
-          <div className="simple-editor-wrapper rounded-lg border border-border bg-background overflow-hidden">
-            <SimpleMenuBar editor={editor} />
-            <EditorContent editor={editor} className="min-h-[140px]" />
-          </div>
+            <TabsContent value="notes">
+              <NotesArea
+                jobBoardEntry={entry}
+                notes={entry ? props.notes : []}
+                loading={entry ? props.notesLoading : false}
+                onNoteAdded={entry ? props.onNoteAdded : () => { return }}
+              />
+            </TabsContent>
+
+            <TabsContent value="description">
+              <div className="simple-editor-wrapper rounded-lg border border-border bg-background overflow-hidden">
+                <SimpleMenuBar editor={editor} />
+                <EditorContent editor={editor} className="min-h-[140px]" />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="flex justify-between items-center">

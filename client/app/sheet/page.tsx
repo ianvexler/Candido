@@ -1,6 +1,7 @@
 "use client";
 
 import { getJobBoardEntries } from "@/api/resources/jobBoardEntries/getJobBoardEntries";
+import { getNotes } from "@/api/resources/notes/getNotes";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 import { uploadCVJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCVJobBoardEntry";
 import { uploadCoverLetterJobBoardEntry } from "@/api/resources/jobBoardEntries/uploadCoverLetterJobBoardEntry";
@@ -10,7 +11,7 @@ import Title from "@/components/common/Title";
 import BoardFilters from "@/components/jobBoard/BoardFilters";
 import SheetTable from "@/components/jobBoard/sheet/SheetTable";
 import { useBoardFilters } from "@/hooks/useBoardFilters";
-import { JobBoardEntry, JobStatus } from "@/lib/types";
+import { JobBoardEntry, JobStatus, Note } from "@/lib/types";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -27,8 +28,27 @@ const SheetPage = () => {
   const [statusFilter, setStatusFilter] = useState<JobStatus[]>([]);
   const [isEmpty, setIsEmpty] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [notesByEntryId, setNotesByEntryId] = useState<Record<number, Note[]>>({});
+
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setNotesForEntry = useCallback((entryId: number, notesOrUpdater: Note[] | ((prev: Note[]) => Note[])) => {
+    setNotesByEntryId((prev) => ({
+      ...prev,
+      [entryId]: typeof notesOrUpdater === "function" ? notesOrUpdater(prev[entryId] ?? []) : notesOrUpdater,
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedJob || notesByEntryId[selectedJob.id] !== undefined) return;
+    void getNotes(selectedJob.id)
+      .then((response) => setNotesForEntry(selectedJob.id, response.notes))
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to get notes");
+        setNotesForEntry(selectedJob.id, []);
+      });
+  }, [selectedJob, notesByEntryId, setNotesForEntry]);
 
   const {
     searchInput,
@@ -336,6 +356,9 @@ const SheetPage = () => {
               onClose={() => handleSheetOpenChange(false)}
               onUpdateJob={onUpdateJob}
               onDelete={(entry) => setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id))}
+              notes={notesByEntryId[selectedJob!.id] ?? []}
+              notesLoading={notesByEntryId[selectedJob!.id] === undefined}
+              onNoteAdded={(note) => setNotesForEntry(selectedJob!.id, (prev) => [...prev, note])}
             />
           )
         )}

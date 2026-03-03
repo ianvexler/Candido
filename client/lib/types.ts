@@ -101,3 +101,12 @@ export type JobBoardEntriesStats = {
     count: number;
   }[];
 };
+
+export type Note = {
+  id: number;
+  userId: number;
+  user: User;
+  createdAt: Date;
+  updatedAt: Date;
+  content: string;
+}

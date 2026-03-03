@@ -3,6 +3,7 @@
 import { deleteJobBoardEntry } from "@/api/resources/jobBoardEntries/deleteJobBoardEntry";
 import { updateJobBoardEntry } from "@/api/resources/jobBoardEntries/updateJobBoardEntry";
 import { getJobBoardEntries } from "@/api/resources/jobBoardEntries/getJobBoardEntries";
+import { getNotes } from "@/api/resources/notes/getNotes";
 import Description from "@/components/common/Description";
 import Title from "@/components/common/Title";
 import JobBoardColumn from "@/components/jobBoard/JobBoardColumn";
@@ -14,13 +15,13 @@ import {
   ARCHIVE_DROPPABLE_ID,
   REJECTED_DROPPABLE_ID,
 } from "@/components/jobBoard/ActionDropZones";
-import { JobBoardEntry, JobStatus } from "@/lib/types";
+import { JobBoardEntry, JobStatus, Note } from "@/lib/types";
 import { useBoardFilters } from "@/hooks/useBoardFilters";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { move } from "@dnd-kit/helpers";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Sheet } from "@/components/ui/Sheet";
 import JobFormSheet from "@/components/jobBoard/JobFormSheet";
@@ -38,8 +39,27 @@ const BoardPage = () => {
   const [draggedFromOffered, setDraggedFromOffered] = useState(false);
   const [draggedEntryOriginalStatus, setDraggedEntryOriginalStatus] = useState<Record<number, JobStatus>>();
   const [pendingDeleteEntry, setPendingDeleteEntry] = useState<JobBoardEntry | null>(null);
+  const [notesByEntryId, setNotesByEntryId] = useState<Record<number, Note[]>>({});
 
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setNotesForEntry = useCallback((entryId: number, notesOrUpdater: Note[] | ((prev: Note[]) => Note[])) => {
+    setNotesByEntryId((prev) => ({
+      ...prev,
+      [entryId]: typeof notesOrUpdater === "function" ? notesOrUpdater(prev[entryId] ?? []) : notesOrUpdater,
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedJob || notesByEntryId[selectedJob.id] !== undefined) return;
+    void getNotes(selectedJob.id)
+      .then((response) => setNotesForEntry(selectedJob.id, response.notes))
+      .catch((error) => {
+        console.error(error);
+        toast.error("Failed to get notes");
+        setNotesForEntry(selectedJob.id, []);
+      });
+  }, [selectedJob, notesByEntryId, setNotesForEntry]);
 
   const {
     searchInput,
@@ -436,6 +456,9 @@ const BoardPage = () => {
               onClose={() => handleSheetOpenChange(false)}
               onUpdateJob={onUpdateJob}
               onDelete={(entry) => setJobBoardEntries((prev) => prev.filter((e) => e.id !== entry.id))}
+              notes={notesByEntryId[selectedJob!.id] ?? []}
+              notesLoading={notesByEntryId[selectedJob!.id] === undefined}
+              onNoteAdded={(note) => setNotesForEntry(selectedJob!.id, (prev) => [...prev, note])}
             />
           )
         )}

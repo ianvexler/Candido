@@ -23,6 +23,7 @@ model User {
   jobBoardTags          JobBoardTag[]
   sessions              Session[]
   feedbackEntries       FeedbackEntry[]
+  jobBoardEntryNotes    JobBoardEntryNotes[]
 }
 
 model Session {
@@ -57,8 +58,10 @@ model JobBoardEntry {
   cvText              String?
   cvKey               String?
   cvFilename          String?
+
   user                User          @relation(fields: [userId], references: [id])
   jobBoardTags        JobBoardTag[] @relation("JobBoardEntryToJobBoardTag")
+  jobBoardEntryNotes  JobBoardEntryNotes[]
 
   @@unique([userId, status, number])
   @@index([title])
@@ -87,6 +90,19 @@ model FeedbackEntry {
   content   String
   type      FeedbackType    @default(OTHER)
   status    FeedbackStatus  @default(PENDING)
+}
+
+model JobBoardEntryNotes {
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  content String
+  jobBoardEntryId Int
+  jobBoardEntry JobBoardEntry @relation(fields: [jobBoardEntryId], references: [id])
+
+  @@index([userId, jobBoardEntryId])
 }
 
 enum JobStatus {

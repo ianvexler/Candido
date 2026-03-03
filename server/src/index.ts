@@ -8,6 +8,7 @@ import jobBoardEntriesRouter from "../routes/jobBoardEntries.js";
 import uploadsRouter from "../routes/uploads.js";
 import usersRouter from "../routes/users.js";
 import feedbackEntriesRouter from "../routes/feedbackEntries.js";
+import notesRouter from "../routes/notes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/sessions", sessionsRouter);
 app.use("/api/job-board-entries", jobBoardEntriesRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/feedback-entries", feedbackEntriesRouter);
+app.use("/api/notes", notesRouter);
 
 // Returns uploaded files
 app.use("/uploads", uploadsRouter);
