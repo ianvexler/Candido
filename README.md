@@ -2,13 +2,30 @@
 
 <hr />
 
-<br />
 Candido is a job application tracker that helps you manage your job search. Add roles you're interested in, move them through stages as you progress, and keep everything organized in one place.
 
 Try it live at [candidohq.com](https://candidohq.com)
 
-<br />
-<br />
+### Board
+
+Track your applications at a glance with a drag-and-drop board. Move roles through each stage—from applied to offer—as things progress.
+
+<img src="client/lib/images/BoardScreenshot.png" alt="Board view" width="680" />
+
+### Sheet
+
+View all your applications in one table. Sort, filter, and search by company or status, and use tags to keep everything in order.
+
+<img src="client/lib/images/SheetScreenshot.png" alt="Sheet view" width="680" />
+
+### Manage applications
+
+Add applications easily and upload the description, your CV and cover letter. All the details you need, in one place.
+
+<img src="client/lib/images/EditJobScreenshot.png" alt="Edit job form" width="680" />
+
+<hr />
+
 A full-stack app with a Next.js client and an Express API server, run via Docker Compose.
 
 ## Prerequisites
