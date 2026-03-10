@@ -134,17 +134,17 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   stateRef.current = { title, company, location, salary, url, status, editorHtml, tags };
 
   const performCreate = useCallback(async (): Promise<boolean> => {
-    const { title: t, company: c, location: loc, salary: sal, url: u, status: s, editorHtml: html } =
+    const { title: title, company: company, location: location, salary: salary, url: url, status: status, editorHtml: html, tags: tags } =
       stateRef.current;
 
-    if (!t.trim() || !c.trim()) {
+    if (!title.trim() || !company.trim()) {
       setFormSubmitted(true);
       return false;
     }
 
     setLoading(true);
     try {
-      const response = await createJobBoardEntry(t, c, loc, sal, u, s, html);
+      const response = await createJobBoardEntry(title, company, location, salary, url, status, html, tags);
       if (props.mode === "create") {
         props.onAddJob(response.jobBoardEntry);
       }
@@ -516,28 +516,26 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         </div>
 
         {!isCreate && entry && (
-          <>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Attachments
-              </h3>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Attachments
+            </h3>
 
-              <SheetFileInputs entry={entry} />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Tags
-              </h3>
-
-              <TagsInput
-                allEntries={props.allEntries}
-                tags={tags}
-                onTagsChange={setTags}
-              />
-            </div>
-          </>
+            <SheetFileInputs entry={entry} />
+          </div>
         )}
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Tags
+          </h3>
+
+          <TagsInput
+            allEntries={props.allEntries}
+            tags={tags}
+            onTagsChange={setTags}
+          />
+        </div>
 
         <div className="flex flex-col gap-2">
           <Tabs defaultValue="description" className="w-full">

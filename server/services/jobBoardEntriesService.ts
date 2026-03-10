@@ -3,6 +3,7 @@ import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { prisma } from "../lib/prisma.js";
 import createHttpError from "http-errors";
 import storageService from "./storageServices.js";
+import type { JobBoardTag } from "@/generated/prisma/client.js";
 
 export const jobBoardEntriesService = {
   async getJobBoardEntries(userId: number) {
@@ -30,12 +31,32 @@ export const jobBoardEntriesService = {
     return entry;
   },
 
-  async createJobBoardEntry(userId: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus = JobStatus.PENDING) {
+  async createJobBoardEntry(userId: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus = JobStatus.PENDING, tagNames: string[]) {
     const { _max } = await prisma.jobBoardEntry.aggregate({
       where: { userId, status },
       _max: { number: true },
     });
     const number = ((_max?.number ?? 0) + 1);
+
+    let tags: JobBoardTag[] = [];
+    if (tagNames !== undefined) {
+      const tagNamesTrimmed = tagNames.map((n) => n.trim()).filter(Boolean);
+      tags = await Promise.all(
+        tagNamesTrimmed.map(async (name) => {
+          const existing = await prisma.jobBoardTag.findUnique({
+            where: { userId_name: { userId, name } },
+          });
+
+          if (existing) {
+            return existing;
+          }
+
+          return prisma.jobBoardTag.create({
+            data: { userId, name },
+          });
+        })
+      );
+    }
 
     return await prisma.jobBoardEntry.create({
       data: {
@@ -48,7 +69,9 @@ export const jobBoardEntriesService = {
         description,
         status,
         number: number + 1,
+        jobBoardTags: { connect: tags.map((t) => ({ id: t.id })) },
       },
+      include: { jobBoardTags: true },
     });
   },
 
@@ -158,7 +181,11 @@ export const jobBoardEntriesService = {
           const existing = await prisma.jobBoardTag.findUnique({
             where: { userId_name: { userId, name } },
           });
-          if (existing) return existing;
+
+          if (existing) {
+            return existing;
+          }
+
           return prisma.jobBoardTag.create({
             data: { userId, name },
           });

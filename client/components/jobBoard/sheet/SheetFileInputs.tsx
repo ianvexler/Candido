@@ -11,8 +11,8 @@ interface SheetFileInputsProps {
 }
 
 const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
-  const initialCVKey = entry.cvKey ?? null;
-  const initialCoverLetterKey = entry.coverLetterKey ?? null;
+  const initialCVKey = entry.cvKey ?? entry.cvFilename ?? null;
+  const initialCoverLetterKey = entry.coverLetterKey ?? entry.coverLetterFilename ?? null;
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
@@ -26,7 +26,7 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
     }
 
     getFileUpload(initialCVKey).then((response) => {
-      setCvFile(new File([response], entry.cvFilename ?? "cv.pdf"));
+      setCvFile(new File([response], entry.cvFilename ?? initialCVKey));
     });
   }, [initialCVKey, entry.cvFilename]);
 
@@ -36,7 +36,7 @@ const SheetFileInputs = ({ entry }: SheetFileInputsProps) => {
     }
 
     getFileUpload(initialCoverLetterKey).then((response) => {
-      setCoverLetterFile(new File([response], entry.coverLetterFilename ?? "cover-letter.pdf"));
+      setCoverLetterFile(new File([response], entry.coverLetterFilename ?? initialCoverLetterKey));
     });
   }, [initialCoverLetterKey, entry.coverLetterFilename]);
 

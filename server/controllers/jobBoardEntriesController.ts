@@ -24,14 +24,14 @@ export const getJobBoardEntry = async (req: Request, res: Response) => {
 };
 
 export const createJobBoardEntry = async (req: Request, res: Response) => {
-  const { title, company, location, salary, url, description, status } = req.body;
+  const { title, company, location, salary, url, description, status, tags } = req.body;
   const userId = req.user!.id;
 
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.createJobBoardEntry(userId, title, company, location, salary, url, description, status);
+  const jobBoardEntry = await jobBoardEntriesService.createJobBoardEntry(userId, title, company, location, salary, url, description, status, tags);
   return res.status(200).json({ jobBoardEntry });
 };
 
