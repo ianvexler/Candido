@@ -132,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         children
       )}
 
-      <SetupModal isOpen={openSetupModal} onClose={() => setOpenSetupModal(false)} />
+      <SetupModal isOpen={true} onClose={() => setOpenSetupModal(false)} />
     </AuthContext.Provider>
   );
 };

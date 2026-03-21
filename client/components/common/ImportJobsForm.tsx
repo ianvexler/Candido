@@ -41,35 +41,36 @@ const ImportJobsForm = ({
   isImporting = false,
   isPreviewing = false,
 }: ImportJobsFormProps) => (
-  <>
-    <div className="space-y-5 mt-4">
-      <p className="text-base text-muted-foreground leading-relaxed">
+  <div className="flex min-h-0 flex-1 flex-col">
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="space-y-5 mt-4">
+        <p className="text-base text-muted-foreground leading-relaxed">
         Upload a spreadsheet (CSV, XLS, or XLSX) with your job data. Tables are detected
         automatically even if they don&apos;t start at the top.
-      </p>
+        </p>
 
-      <div className="space-y-2">
+        <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Expected format</p>
-        <code className="block w-full rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground font-mono">
-          Title, Company, Location, Salary, URL, Status
-        </code>
+          <code className="block w-full rounded-md bg-muted px-4 py-3 text-sm text-muted-foreground font-mono">
+            Title, Company, Location, Salary, URL, Status
+          </code>
 
-        <div className="space-y-2 mt-4">
-          <p className="text-sm font-medium text-foreground">Status must be one of:</p>
-          <ul className="flex flex-wrap gap-1.5">
-            {Object.values(JobStatus).map((status) => (
-              <li
-                key={status}
-                className="inline-flex rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
-              >
-                {capitalize(status.toLowerCase())}
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-2 mt-4">
+            <p className="text-sm font-medium text-foreground">Status must be one of:</p>
+            <ul className="flex flex-wrap gap-1.5">
+              {Object.values(JobStatus).map((status) => (
+                <li
+                  key={status}
+                  className="inline-flex rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                >
+                  {capitalize(status.toLowerCase())}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
 
-      <FileAttachment
+        <FileAttachment
         label="Spreadsheet"
         file={file}
         onUpload={onFileChange}
@@ -77,15 +78,15 @@ const ImportJobsForm = ({
         onDelete={onDelete}
         fileInputRef={fileInputRef}
         accept=".xlsx,.xls,.csv"
-      />
+        />
 
-      {previewEntries !== null && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">
-            Preview — {previewEntries.length} job{previewEntries.length === 1 ? "" : "s"} to import
-          </p>
+        {previewEntries !== null && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              Preview — {previewEntries.length} job{previewEntries.length === 1 ? "" : "s"} to import
+            </p>
 
-          <div className="max-h-64 overflow-y-auto">
+            <div className="max-h-40 overflow-y-auto">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted/50">
                 <TableHeaderRow>
@@ -111,12 +112,13 @@ const ImportJobsForm = ({
                 ))}
               </TableBody>
             </Table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
 
-    <div className="mt-8 flex justify-end gap-3">
+    <div className="mt-6 flex shrink-0 justify-end gap-3">
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancel
       </Button>
@@ -140,7 +142,7 @@ const ImportJobsForm = ({
         </Button>
       )}
     </div>
-  </>
+  </div>
 );
 
 export default ImportJobsForm;

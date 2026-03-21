@@ -105,14 +105,14 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
         <Dialog.Overlay className="fixed inset-0 z-100 bg-black/50" />
 
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-101 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-lg bg-background p-10 shadow-lg"
+          className="fixed left-1/2 top-1/2 z-101 flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg bg-background p-10 shadow-lg"
           onPointerDownOutside={handleClose}
           onEscapeKeyDown={handleClose}
         >
           {stage === "intro" ? (
             <>
               <Dialog.Title asChild>
-                <h2 className="text-2xl font-semibold text-center mb-4">
+                <h2 className="shrink-0 text-2xl font-semibold text-center mb-4">
                   Welcome to Candido
                 </h2>
               </Dialog.Title>
@@ -140,11 +140,11 @@ const SetupModal = ({ isOpen, onClose }: SetupModalProps) => {
           ) : (
             <>
               <Dialog.Title asChild>
-                <h2 className="text-2xl font-semibold">Import your job applications</h2>
+                <h2 className="shrink-0 text-2xl font-semibold">Import your job applications</h2>
               </Dialog.Title>
 
               <Dialog.Description asChild>
-                <div>
+                <div className="flex min-h-0 flex-1 flex-col">
                   <ImportJobsForm
                     file={file}
                     fileInputRef={fileInputRef}
