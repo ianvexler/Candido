@@ -110,5 +110,8 @@ jobs:
 
             export IMAGE_TAG="$REF"
 
+            docker image prune -af || true
+            docker container prune -f || true
+
             docker-compose -f docker-compose.prod.yml --env-file server/.env pull
             docker-compose -f docker-compose.prod.yml --env-file server/.env up -d --force-recreate
