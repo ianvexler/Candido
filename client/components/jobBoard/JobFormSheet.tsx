@@ -85,6 +85,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState<boolean>(false);
   const [discardChangesModalOpen, setDiscardChangesModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [detailsTab, setDetailsTab] = useState<"description" | "notes">("description");
 
   const isTitleValid = title.trim().length > 0;
   const isCompanyValid = company.trim().length > 0;
@@ -100,12 +101,26 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   });
 
   useEffect(() => {
-    if (isCreate) {
+    if (isCreate || !editor) {
       return;
     }
 
-    editor?.commands.setContent(initialDescription);
-  }, [isCreate, entry, editor?.commands, initialDescription]);
+    editor.commands.setContent(initialDescription);
+  }, [isCreate, editor, entry?.id, initialDescription]);
+
+  useEffect(() => {
+    setDetailsTab("description");
+  }, [isCreate, entry?.id]);
+
+  const handleDetailsTabChange = (value: string) => {
+    setDetailsTab(value as "description" | "notes");
+    
+    if (value === "description") {
+      requestAnimationFrame(() => {
+        editor?.commands.focus("end");
+      });
+    }
+  };
 
   const hasUpdatedFields = useMemo(() => {
     if (isCreate) {
@@ -538,7 +553,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Tabs defaultValue="description" className="w-full">
+          <Tabs value={detailsTab} onValueChange={handleDetailsTabChange} className="w-full">
             <TabsList>
               <TabsTrigger value="description" className="px-4">Description</TabsTrigger>
               <TabsTrigger value="notes" className="px-4" disabled={isCreate}>Notes</TabsTrigger>
@@ -553,7 +568,11 @@ const JobFormSheet = (props: JobFormSheetProps) => {
               />
             </TabsContent>
 
-            <TabsContent value="description">
+            <TabsContent
+              value="description"
+              forceMount
+              className="data-[state=inactive]:hidden"
+            >
               <div className="simple-editor-wrapper rounded-lg border border-border bg-background overflow-hidden">
                 <SimpleMenuBar editor={editor} />
                 <EditorContent editor={editor} className="min-h-[140px]" />
