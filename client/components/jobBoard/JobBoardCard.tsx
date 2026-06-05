@@ -5,6 +5,7 @@ import { useDragOperation } from "@dnd-kit/react";
 import { format } from "date-fns";
 import { CalendarIcon, GlobeIcon, TagIcon } from "lucide-react";
 import { ACTION_DROPPABLE_IDS } from "./ActionDropZones";
+import classNames from "classnames";
 
 interface JobBoardCardProps {
   entry: JobBoardEntry;
@@ -23,6 +24,20 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
   });
   const { target } = useDragOperation();
   const isOverActionZone = isDragging && target?.id && ACTION_DROPPABLE_IDS.includes(target.id as (typeof ACTION_DROPPABLE_IDS)[number]);
+
+  const closingDateColor = (closingDate: Date) => {
+    closingDate = new Date(closingDate);
+
+    if (closingDate < new Date()) {
+      return "text-red-600";
+    }
+
+    if (closingDate < new Date(new Date().setDate(new Date().getDate() + 7))) {
+      return "text-yellow-600";
+    }
+
+    return "";
+  }
 
   return (
     <Card
@@ -72,12 +87,23 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                {/* <div className="flex items-center gap-1 shrink-0">
                   {entry.createdAt && (
                     <>
                       <CalendarIcon className="size-4" strokeWidth={1} />
                       <p>{format(new Date(entry.createdAt), "MMM d, yyyy")}</p>
                     </>
+                  )}
+                </div> */}
+
+                <div>
+                  {entry.closingDate && (
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className={classNames("size-4", closingDateColor(entry.closingDate))} strokeWidth={1} />
+                      <p className={classNames("text-xs", closingDateColor(entry.closingDate))}>
+                        {format(new Date(entry.closingDate), "MMM d, yyyy")}
+                      </p>
+                    </div>
                   )}
                 </div>
               </>

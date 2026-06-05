@@ -11,7 +11,8 @@ export const updateJobBoardEntry = async (
   description: string,
   status: JobStatus,
   number: number,
-  tagNames?: string[]
+  tagNames?: string[],
+  closingDate?: Date | null
 ) => {
   const response = await apiClient.put(`/api/job-board-entries/${id}`, {
     id,
@@ -24,6 +25,7 @@ export const updateJobBoardEntry = async (
     status,
     number,
     tagNames,
+    closingDate,
   });
   return response.data;
 };

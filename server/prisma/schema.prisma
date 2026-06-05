@@ -58,6 +58,7 @@ model JobBoardEntry {
   cvText              String?
   cvKey               String?
   cvFilename          String?
+  closingDate         DateTime?
 
   user                User          @relation(fields: [userId], references: [id])
   jobBoardTags        JobBoardTag[] @relation("JobBoardEntryToJobBoardTag")

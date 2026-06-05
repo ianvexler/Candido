@@ -31,7 +31,7 @@ export const jobBoardEntriesService = {
     return entry;
   },
 
-  async createJobBoardEntry(userId: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus = JobStatus.PENDING, tagNames: string[]) {
+  async createJobBoardEntry(userId: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus = JobStatus.PENDING, tagNames: string[], closingDate?: Date | null) {
     const { _max } = await prisma.jobBoardEntry.aggregate({
       where: { userId, status },
       _max: { number: true },
@@ -58,19 +58,25 @@ export const jobBoardEntriesService = {
       );
     }
 
+    const createData: Parameters<typeof prisma.jobBoardEntry.create>[0]["data"] = {
+      userId,
+      title,
+      company,
+      location,
+      salary,
+      url,
+      description,
+      status,
+      number: number + 1,
+      jobBoardTags: { connect: tags.map((t) => ({ id: t.id })) },
+    };
+
+    if (closingDate !== undefined) {
+      createData.closingDate = closingDate;
+    }
+
     return await prisma.jobBoardEntry.create({
-      data: {
-        userId,
-        title,
-        company,
-        location,
-        salary,
-        url,
-        description,
-        status,
-        number: number + 1,
-        jobBoardTags: { connect: tags.map((t) => ({ id: t.id })) },
-      },
+      data: createData,
       include: { jobBoardTags: true },
     });
   },
@@ -119,7 +125,7 @@ export const jobBoardEntriesService = {
     });
   },
 
-  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus, number: number, tagNames?: string[]) {
+  async updateJobBoardEntry(userId: number, id: number, title: string, company: string, location: string, salary: string, url: string, description: string, status: JobStatus, number: number, tagNames?: string[], closingDate?: Date | null) {
     const currentEntry = await prisma.jobBoardEntry.findUnique({ where: { id } });
 
     if (!currentEntry) {
@@ -173,6 +179,10 @@ export const jobBoardEntriesService = {
       status,
       number: number,
     };
+
+    if (closingDate !== undefined) {
+      updateData.closingDate = closingDate;
+    }
 
     if (tagNames !== undefined) {
       const tagNamesTrimmed = tagNames.map((n) => n.trim()).filter(Boolean);

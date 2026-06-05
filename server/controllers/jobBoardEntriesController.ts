@@ -24,14 +24,14 @@ export const getJobBoardEntry = async (req: Request, res: Response) => {
 };
 
 export const createJobBoardEntry = async (req: Request, res: Response) => {
-  const { title, company, location, salary, url, description, status, tags } = req.body;
+  const { title, company, location, salary, url, description, status, tags, closingDate } = req.body;
   const userId = req.user!.id;
 
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.createJobBoardEntry(userId, title, company, location, salary, url, description, status, tags);
+  const jobBoardEntry = await jobBoardEntriesService.createJobBoardEntry(userId, title, company, location, salary, url, description, status, tags, closingDate);
   return res.status(200).json({ jobBoardEntry });
 };
 
@@ -52,13 +52,13 @@ export const bulkImportJobBoardEntries = async (req: Request, res: Response) => 
 };
 
 export const updateJobBoardEntry = async (req: Request, res: Response) => {
-  const { id, title, company, location, salary, url, description, status, number, tagNames } = req.body;
+  const { id, title, company, location, salary, url, description, status, number, tagNames, closingDate } = req.body;
   const userId = req.user!.id;
   if (!userId) {
     return res.status(400).json({ error: "User ID is required" });
   }
 
-  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status, number, tagNames);
+  const jobBoardEntry = await jobBoardEntriesService.updateJobBoardEntry(userId, id, title, company, location, salary, url, description, status, number, tagNames, closingDate);
   return res.status(200).json({ jobBoardEntry });
 };
 
