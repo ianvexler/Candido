@@ -23,6 +23,7 @@ import { Button } from "../ui/Button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/Tabs";
 import NotesArea from "./NotesArea";
 import type { Note } from "@/lib/types";
+import { format, parse, parseISO } from "date-fns";
 
 type JobFormSheetProps =
   | {
@@ -58,6 +59,15 @@ const defaultValues = {
 const isEditorContentEmpty = (html: string) =>
   !html || html === "<p></p>" || html === "<p><br></p>" || html.replace(/<[^>]*>/g, "").trim() === "";
 
+const toDateInputValue = (date: Date | string | null | undefined): string => {
+  if (!date) return "";
+  const parsed = typeof date === "string" ? parseISO(date) : date;
+  return format(parsed, "yyyy-MM-dd");
+};
+
+const toClosingDatePayload = (date: string): Date | null =>
+  date ? parse(date, "yyyy-MM-dd", new Date()) : null;
+
 const JobFormSheet = (props: JobFormSheetProps) => {
   const router = useRouter();
   const isCreate = props.mode === "create";
@@ -71,6 +81,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   const initialStatus = entry?.status ?? defaultValues.status;
   const initialDescription = entry?.description ?? defaultValues.description;
   const initialTags = entry?.jobBoardTags?.map((t) => t.name) ?? defaultValues.tags;
+  const initialClosingDate = toDateInputValue(entry?.closingDate);
 
   const [title, setTitle] = useState<string>(initialTitle);
   const [company, setCompany] = useState<string>(initialCompany);
@@ -86,6 +97,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   const [discardChangesModalOpen, setDiscardChangesModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [detailsTab, setDetailsTab] = useState<"description" | "notes">("description");
+  const [closingDate, setClosingDate] = useState<string>(initialClosingDate);
 
   const isTitleValid = title.trim().length > 0;
   const isCompanyValid = company.trim().length > 0;
@@ -140,13 +152,16 @@ const JobFormSheet = (props: JobFormSheetProps) => {
       salary !== (entry!.salary ?? "") ||
       url !== (entry!.url ?? "") ||
       status !== entry!.status ||
+      closingDate !== toDateInputValue(entry!.closingDate) ||
       editorHtml !== initialDescription ||
       tagsChanged
     );
-  }, [isCreate, entry, title, company, location, salary, url, status, editorHtml, initialDescription, tags]);
+  }, [isCreate, entry, title, company, location, salary, url, status, closingDate, editorHtml, initialDescription, tags]);
 
   const stateRef = useRef({ title, company, location, salary, url, status, editorHtml, tags });
   stateRef.current = { title, company, location, salary, url, status, editorHtml, tags };
+
+  const performSaveRef = useRef<() => Promise<boolean>>(async () => false);
 
   const performCreate = useCallback(async (): Promise<boolean> => {
     const { title: title, company: company, location: location, salary: salary, url: url, status: status, editorHtml: html, tags: tags } =
@@ -158,8 +173,11 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     }
 
     setLoading(true);
+
+    const closingDateDate = toClosingDatePayload(closingDate);
+
     try {
-      const response = await createJobBoardEntry(title, company, location, salary, url, status, html, tags);
+      const response = await createJobBoardEntry(title, company, location, salary, url, status, html, tags, closingDateDate ?? undefined);
       if (props.mode === "create") {
         props.onAddJob(response.jobBoardEntry);
       }
@@ -174,7 +192,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     } finally {
       setLoading(false);
     }
-  }, [props]);
+  }, [closingDate, props]);
 
   const performUpdate = useCallback(async (): Promise<boolean> => {
     if (isCreate || !entry) return false;
@@ -200,6 +218,8 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         newNumber = maxNumber + 1;
       }
 
+      const closingDateDate = toClosingDatePayload(closingDate);
+
       const response = await updateJobBoardEntry(
         entry.id,
         title,
@@ -210,10 +230,12 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         editorHtml,
         status,
         newNumber,
-        tags
+        tags,
+        closingDateDate
       );
 
       props.onUpdateJob(response.jobBoardEntry);
+      setClosingDate(toDateInputValue(response.jobBoardEntry.closingDate));
       return true;
     } catch (error) {
       console.error(error);
@@ -222,20 +244,21 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     } finally {
       setLoading(false);
     }
-  }, [isCreate, entry, props]);
+  }, [isCreate, entry, closingDate, props]);
 
   const performSave = isCreate ? performCreate : performUpdate;
+  performSaveRef.current = performSave;
 
   const debouncedSave = useMemo(
     () =>
       debounce(() => {
-        if (!isCreate) performSave();
+        if (!isCreate) void performSaveRef.current();
       }, 600),
-    [performSave, isCreate]
+    [isCreate]
   );
 
   useEffect(() => {
-    if (isCreate || !hasUpdatedFields) {
+    if (isCreate || !hasUpdatedFields || loading) {
       return;
     }
 
@@ -244,7 +267,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     return () => {
       debouncedSave.cancel();
     };
-  }, [isCreate, title, company, location, salary, url, status, editorHtml, tags, hasUpdatedFields, debouncedSave]);
+  }, [isCreate, title, company, location, salary, url, status, closingDate, editorHtml, tags, hasUpdatedFields, loading, debouncedSave]);
 
   const handleConfirmation = async () => {
     if (isCreate) {
@@ -328,7 +351,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         stateRef.current.editorHtml,
         newStatus,
         newNumber,
-        stateRef.current.tags
+        stateRef.current.tags,
       );
 
       props.onUpdateJob(response.jobBoardEntry);
@@ -479,7 +502,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <div className="flex flex-col gap-2">
               <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Location
@@ -493,6 +516,22 @@ const JobFormSheet = (props: JobFormSheetProps) => {
                 onChange={(e) => setLocation(e.target.value)}
                 disabled={loading}
                 placeholder="e.g. Remote, New York"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Closing Date
+              </h3>
+
+              <InlineInput
+                id="closingDate"
+                type="date"
+                autoComplete="closingDate"
+                value={closingDate}
+                onChange={(e) => setClosingDate(e.target.value)}
+                disabled={loading}
+                placeholder="e.g. 2001-01-01"
               />
             </div>
 
@@ -581,50 +620,62 @@ const JobFormSheet = (props: JobFormSheetProps) => {
           </Tabs>
         </div>
 
-        <div className="flex justify-between items-center">
-          {isCreate ? (
-            <Button type="submit" disabled={loading} className="w-fit">
-              {loading ? "Creating..." : "Create"}
-            </Button>
-          ) : (
-            <>
-              <div />
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleStatusAction(JobStatus.REJECTED)}
-                >
-                  <XCircleIcon className="size-4" />
-                  Rejected
-                </Button>
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            {isCreate ? (
+              <Button type="submit" disabled={loading} className="w-fit">
+                {loading ? "Creating..." : "Create"}
+              </Button>
+            ) : (
+              <>
+                <div />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    onClick={() => handleStatusAction(JobStatus.REJECTED)}
+                  >
+                    <XCircleIcon className="size-4" />
+                    Rejected
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={() => handleStatusAction(JobStatus.ARCHIVED)}
-                >
-                  <ArchiveIcon className="size-4" />
-                  Archive
-                </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    onClick={() => handleStatusAction(JobStatus.ARCHIVED)}
+                  >
+                    <ArchiveIcon className="size-4" />
+                    Archive
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={loading}
-                  onClick={handleDeleteClick}
-                >
-                  <Trash2Icon className="size-4" />
-                  Delete
-                </Button>
-              </div>
-            </>
-          )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    onClick={handleDeleteClick}
+                  >
+                    <Trash2Icon className="size-4" />
+                    Delete
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-row justify-end gap-2">
+            {!isCreate && entry && (
+              <p className="text-xs text-muted-foreground">
+                Created: {format(new Date(entry.createdAt), "MMM d, yyyy")}
+                <span className="mx-2 text-border">·</span>
+                Updated: {format(new Date(entry.updatedAt), "MMM d, yyyy")}
+              </p>
+            )}
+          </div>
         </div>
       </form>
 

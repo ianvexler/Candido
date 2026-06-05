@@ -55,6 +55,7 @@ export type JobBoardEntry = {
   coverLetterText?: string;
   coverLetterKey?: string;
   coverLetterFilename?: string;
+  closingDate?: Date;
 }
 
 export type JobBoardTag = {
