@@ -1,24 +1,21 @@
-FROM node:24-alpine
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY prisma ./prisma
-COPY prisma.config.ts ./
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-ARG DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
-ENV DATABASE_URL=$DATABASE_URL
-
-RUN npm ci
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-RUN npx prisma generate
 RUN mkdir -p uploads
 
-ENV NODE_ENV=production
-ENV PORT=8000
 EXPOSE 8000
 
-USER node
+FROM base AS dev
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-CMD ["npm", "start"]
+FROM base AS production
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

@@ -40,35 +40,22 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-      args:
-        DATABASE_URL: postgresql://postgres:password@db:5432/candido
+      target: dev
     ports:
-      - "8000:5000"
+      - "8000:8000"
+    env_file:
+      - ./server/.env
     environment:
-      NODE_ENV: development
-      PORT: 5000
       DATABASE_URL: postgresql://postgres:password@db:5432/candido
+      CORS_ORIGIN: http://localhost:3000
     volumes:
       - ./server:/app
-    command: sh -c "npm install && npx prisma generate && npm run dev"
+      - ./server/uploads:/app/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       db:
         condition: service_healthy
 
-  prisma-studio:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-      args:
-        DATABASE_URL: postgresql://postgres:password@db:5432/candido
-    ports:
-      - "5555:5555"
-    environment:
-      DATABASE_URL: postgresql://postgres:password@db:5432/candido
-    command: npx prisma studio --browser none --port 5555
-    depends_on:
-      db:
-        condition: service_healthy
 networks:
   default:
     driver: bridge

@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+build
+.env
+.git
+*.md
+*.log
+.env*
+!.env.example
+coverage
+.nyc_output
+*.tsbuildinfo
+dist
+uploads
