@@ -26,18 +26,25 @@ module Authenticatable
   end
 
   def set_auth_cookie(session_record)
-    cookies[AUTH_COOKIE] = {
+    cookies[AUTH_COOKIE] = auth_cookie_options.merge(
       value: session_record.token,
-      httponly: true,
-      secure: Rails.env.production?,
-      same_site: :lax,
-      expires: session_record.expires_at,
-      path: "/"
-    }
+      expires: session_record.expires_at
+    )
   end
 
   def clear_auth_cookie
-    cookies.delete(AUTH_COOKIE, path: "/")
+    cookies.delete(AUTH_COOKIE, **auth_cookie_options.slice(:path, :domain))
+  end
+
+  def auth_cookie_options
+    options = {
+      httponly: true,
+      secure: Rails.env.production?,
+      same_site: :lax,
+      path: "/"
+    }
+    options[:domain] = :all if Rails.env.production?
+    options
   end
 
   def bearer_token

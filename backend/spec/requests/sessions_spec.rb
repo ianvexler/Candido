@@ -40,6 +40,17 @@ RSpec.describe "Sessions" do
       expect(response.parsed_body).to eq("error" => "Invalid email or password")
     end
 
+    it "logs in with a Node bcrypt hash" do
+      user = create(:user, password: "temporary")
+      digest = BCrypt::Password.create("secret123", cost: 10).to_s.sub("$2a$", "$2b$")
+      user.update_column(:password_digest, digest)
+
+      post "/api/v1/sessions", params: { email: " #{user.email} ", password: "secret123" }, as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(response.parsed_body["user"]["id"]).to eq(user.id)
+    end
+
     it "requires email and password" do
       post "/api/v1/sessions", params: { email: "a@b.com" }, as: :json
 

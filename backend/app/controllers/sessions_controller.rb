@@ -1,7 +1,9 @@
 class SessionsController < ApplicationController
+  wrap_parameters false
+
   def create
-    email = params[:email]
-    password = params[:password]
+    email = credential(:email)
+    password = credential(:password)
     raise ApiError.new("Email and password are required", status: :bad_request) if email.blank? || password.blank?
 
     user = User.authenticate_for_login!(email, password)
@@ -16,9 +18,9 @@ class SessionsController < ApplicationController
   end
 
   def register
-    email = params[:email]
-    password = params[:password]
-    name = params[:name]
+    email = credential(:email)
+    password = credential(:password)
+    name = credential(:name)
     if email.blank? || password.blank? || name.blank?
       raise ApiError.new("Email, password and name are required", status: :bad_request)
     end
@@ -54,5 +56,15 @@ class SessionsController < ApplicationController
     Session.find_by(token: auth_token)&.destroy!
     clear_auth_cookie
     render json: { message: "Logged out successfully" }
+  end
+
+  private
+
+  def credential(key)
+    raw = request.request_parameters
+    value = raw[key.to_s].presence || raw[key].presence || params[key]
+    return value.to_s.strip if key == :email || key == :name
+
+    value
   end
 end

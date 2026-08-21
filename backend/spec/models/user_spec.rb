@@ -14,4 +14,13 @@ RSpec.describe User do
     expect(user.authenticate("secret123")).to eq(user)
     expect(user.authenticate("wrong")).to be_falsey
   end
+
+  it "authenticates Node bcrypt $2b$ hashes" do
+    user = create(:user, password: "temporary")
+    digest = BCrypt::Password.create("secret123", cost: 10).to_s.sub("$2a$", "$2b$")
+    user.update_column(:password_digest, digest)
+
+    expect(described_class.authenticate_for_login!(user.email, "secret123")).to eq(user)
+    expect { described_class.authenticate_for_login!(user.email, "wrong") }.to raise_error(ApiError)
+  end
 end

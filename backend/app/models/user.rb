@@ -10,14 +10,31 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true
 
   def self.authenticate_for_login!(email, password)
-    user = find_by(email: email)
-    raise ApiError.new("Invalid email or password", status: :unauthorized) if user.nil? || user.password_digest.blank?
+    user = find_by(email: email.to_s.strip)
+    digest = user&.password_digest_value
+    raise ApiError.new("Invalid email or password", status: :unauthorized) if user.nil? || digest.blank?
     raise ApiError.new("Please verify your email before signing in", status: :forbidden) unless user.verified?
-    raise ApiError.new("Invalid email or password", status: :unauthorized) unless user.authenticate(password)
+    unless bcrypt_password?(digest, password)
+      raise ApiError.new("Invalid email or password", status: :unauthorized)
+    end
 
     user.update!(last_login_at: Time.current)
     user
   end
+
+  def password_digest_value
+    digest = read_attribute(:password_digest) if has_attribute?(:password_digest)
+    return digest if digest.present?
+
+    read_attribute(:password) if has_attribute?(:password)
+  end
+
+  def self.bcrypt_password?(digest, password)
+    BCrypt::Password.new(digest).is_password?(password)
+  rescue BCrypt::Errors::InvalidHash
+    false
+  end
+  private_class_method :bcrypt_password?
 
   def self.register!(email:, password:, name:)
     raise ApiError.new("User already exists", status: :bad_request) if exists?(email: email)
