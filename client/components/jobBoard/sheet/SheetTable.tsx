@@ -217,11 +217,11 @@ const SheetTable = ({
 
               <TableCell
                 truncate
-                truncateTitle={entry.jobBoardTags?.length ? entry.jobBoardTags.map((t) => t.name).join(", ") : undefined}
+                truncateTitle={entry.job_board_tags?.length ? entry.job_board_tags.map((t) => t.name).join(", ") : undefined}
                 muted
               >
-                {entry.jobBoardTags?.length
-                  ? entry.jobBoardTags.map((t) => t.name).join(", ")
+                {entry.job_board_tags?.length
+                  ? entry.job_board_tags.map((t) => t.name).join(", ")
                   : "—"}
               </TableCell>
 
@@ -236,7 +236,7 @@ const SheetTable = ({
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="start" className="min-w-[120px]">
-                      {entry.cvKey ? (
+                      {entry.cv_key ? (
                         <>
                           <DropdownMenuItem
                             className="cursor-pointer"
@@ -279,7 +279,7 @@ const SheetTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="min-w-[120px]">
-                      {entry.coverLetterKey ? (
+                      {entry.cover_letter_key ? (
                         <>
                           <DropdownMenuItem
                             className="cursor-pointer"
@@ -317,8 +317,8 @@ const SheetTable = ({
               </TableCell>
 
               <TableCell muted>
-                {entry.createdAt
-                  ? format(new Date(entry.createdAt), "MMM d, yyyy")
+                {entry.created_at
+                  ? format(new Date(entry.created_at), "MMM d, yyyy")
                   : "—"}
               </TableCell>
             </TableRow>

@@ -80,8 +80,8 @@ const JobFormSheet = (props: JobFormSheetProps) => {
   const initialUrl = entry?.url ?? defaultValues.url;
   const initialStatus = entry?.status ?? defaultValues.status;
   const initialDescription = entry?.description ?? defaultValues.description;
-  const initialTags = entry?.jobBoardTags?.map((t) => t.name) ?? defaultValues.tags;
-  const initialClosingDate = toDateInputValue(entry?.closingDate);
+  const initialTags = entry?.job_board_tags?.map((t) => t.name) ?? defaultValues.tags;
+  const initialClosingDate = toDateInputValue(entry?.closing_date);
 
   const [title, setTitle] = useState<string>(initialTitle);
   const [company, setCompany] = useState<string>(initialCompany);
@@ -139,7 +139,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
       return title.trim() !== "" || company.trim() !== "";
     }
 
-    const entryTagNames = entry!.jobBoardTags?.map((t) => t.name) ?? [];
+    const entryTagNames = entry!.job_board_tags?.map((t) => t.name) ?? [];
     const tagsChanged =
       tags.length !== entryTagNames.length ||
       tags.some((t) => !entryTagNames.includes(t)) ||
@@ -152,7 +152,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
       salary !== (entry!.salary ?? "") ||
       url !== (entry!.url ?? "") ||
       status !== entry!.status ||
-      closingDate !== toDateInputValue(entry!.closingDate) ||
+      closingDate !== toDateInputValue(entry!.closing_date) ||
       editorHtml !== initialDescription ||
       tagsChanged
     );
@@ -179,7 +179,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
     try {
       const response = await createJobBoardEntry(title, company, location, salary, url, status, html, tags, closingDateDate ?? undefined);
       if (props.mode === "create") {
-        props.onAddJob(response.jobBoardEntry);
+        props.onAddJob(response.job_board_entry);
       }
       
       toast.success("Job added successfully");
@@ -234,8 +234,8 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         closingDateDate
       );
 
-      props.onUpdateJob(response.jobBoardEntry);
-      setClosingDate(toDateInputValue(response.jobBoardEntry.closingDate));
+      props.onUpdateJob(response.job_board_entry);
+      setClosingDate(toDateInputValue(response.job_board_entry.closing_date));
       return true;
     } catch (error) {
       console.error(error);
@@ -354,7 +354,7 @@ const JobFormSheet = (props: JobFormSheetProps) => {
         stateRef.current.tags,
       );
 
-      props.onUpdateJob(response.jobBoardEntry);
+      props.onUpdateJob(response.job_board_entry);
       toast.success(`Moved to ${capitalize(newStatus.toLowerCase())}`);
       props.onClose();
     } catch (error) {
@@ -670,9 +670,9 @@ const JobFormSheet = (props: JobFormSheetProps) => {
           <div className="flex flex-row justify-end gap-2">
             {!isCreate && entry && (
               <p className="text-xs text-muted-foreground">
-                Created: {format(new Date(entry.createdAt), "MMM d, yyyy")}
+                Created: {format(new Date(entry.created_at), "MMM d, yyyy")}
                 <span className="mx-2 text-border">·</span>
-                Updated: {format(new Date(entry.updatedAt), "MMM d, yyyy")}
+                Updated: {format(new Date(entry.updated_at), "MMM d, yyyy")}
               </p>
             )}
           </div>

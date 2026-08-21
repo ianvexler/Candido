@@ -16,9 +16,9 @@ interface EntryDocCardProps {
   onUpdateEntry: (entry: JobBoardEntry) => void;
 }
 const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
-  const initialDocText = type === "CV" ? entry.cvText : entry.coverLetterText;
-  const initialDocKey = type === "CV" ? entry.cvKey : entry.coverLetterKey;
-  const initialDocDisplayName = type === "CV" ? entry.cvFilename : entry.coverLetterFilename;
+  const initialDocText = type === "CV" ? entry.cv_text : entry.cover_letter_text;
+  const initialDocKey = type === "CV" ? entry.cv_key : entry.cover_letter_key;
+  const initialDocDisplayName = type === "CV" ? entry.cv_filename : entry.cover_letter_filename;
 
   const [docText, setDocText] = useState<string | undefined>(initialDocText);
   const [docFile, setDocFile] = useState<File | undefined>();
@@ -62,23 +62,23 @@ const EntryDocCard = ({ type, entry, onUpdateEntry }: EntryDocCardProps) => {
     try {
       if (type === "CV") {
         const response = await uploadCVJobBoardEntry(entry.id, docText, docFile);
-        const updated = response.jobBoardEntry;
+        const updated = response.job_board_entry;
         
         onUpdateEntry({
           ...entry,
-          cvText: updated.cvText,
-          cvKey: updated.cvKey,
-          cvFilename: updated.cvFilename,
+          cv_text: updated.cv_text,
+          cv_key: updated.cv_key,
+          cv_filename: updated.cv_filename,
         });
       } else {
         const response = await uploadCoverLetterJobBoardEntry(entry.id, docText, docFile);
-        const updated = response.jobBoardEntry;
+        const updated = response.job_board_entry;
         
         onUpdateEntry({
           ...entry,
-          coverLetterText: updated.coverLetterText,
-          coverLetterKey: updated.coverLetterKey,
-          coverLetterFilename: updated.coverLetterFilename,
+          cover_letter_text: updated.cover_letter_text,
+          cover_letter_key: updated.cover_letter_key,
+          cover_letter_filename: updated.cover_letter_filename,
         });
       }
 

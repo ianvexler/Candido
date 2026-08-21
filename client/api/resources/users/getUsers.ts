@@ -6,7 +6,7 @@ type GetUsersResponse = {
 };
 
 const getUsers = async (): Promise<GetUsersResponse> => {
-  const response = await apiClient.get('/api/users');
+  const response = await apiClient.get('/users');
   return response.data;
 };
 

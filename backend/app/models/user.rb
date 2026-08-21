@@ -1,40 +1,11 @@
-# == Schema Information
-#
-# Table name: User
-#
-#  id                    :integer          not null, primary key
-#  admin                 :boolean          default(FALSE), not null
-#  email                 :text             not null
-#  lastLoginAt           :datetime
-#  name                  :text
-#  password              :text
-#  setupCompleted        :boolean          default(FALSE), not null
-#  verificationExpiresAt :datetime
-#  verificationToken     :text
-#  verified              :boolean          default(FALSE), not null
-#
-# Indexes
-#
-#  User_email_key  (email) UNIQUE
-#
 class User < ApplicationRecord
-  include PrismaRecord
-
-  use_prisma_table "User", timestamps: false
-  prisma_aliases(
-    verification_token: :verificationToken,
-    verification_expires_at: :verificationExpiresAt,
-    setup_completed: :setupCompleted,
-    last_login_at: :lastLoginAt
-  )
-
   has_secure_password
 
-  has_many :sessions, dependent: :destroy, foreign_key: "userId"
-  has_many :job_board_entries, dependent: :destroy, foreign_key: "userId"
-  has_many :job_board_tags, dependent: :destroy, foreign_key: "userId"
-  has_many :job_board_entry_notes, dependent: :destroy, foreign_key: "userId"
-  has_many :feedback_entries, dependent: :destroy, foreign_key: "userId"
+  has_many :sessions, dependent: :destroy
+  has_many :job_board_entries, dependent: :destroy
+  has_many :job_board_tags, dependent: :destroy
+  has_many :job_board_entry_notes, dependent: :destroy
+  has_many :feedback_entries, dependent: :destroy
 
   validates :email, presence: true, uniqueness: true
 
@@ -73,13 +44,5 @@ class User < ApplicationRecord
 
   def verification_url
     "#{ENV.fetch("CORS_ORIGIN", "http://localhost:3000").chomp("/")}/verify?token=#{verification_token}"
-  end
-
-  def password_digest
-    self[:password]
-  end
-
-  def password_digest=(value)
-    self[:password] = value
   end
 end

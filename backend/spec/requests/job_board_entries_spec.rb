@@ -4,44 +4,44 @@ RSpec.describe "Job board entries" do
   let(:user) { create(:user) }
   let(:headers) { auth_headers(user) }
 
-  describe "GET /api/job-board-entries" do
+  describe "GET /api/v1/job_board_entries" do
     it "returns the current user's entries with tags" do
       tag = create(:job_board_tag, user: user, name: "Remote")
       entry = create(:job_board_entry, user: user, title: "Engineer", number: 1)
       entry.job_board_tags << tag
       create(:job_board_entry, title: "Other user job", number: 1)
 
-      get "/api/job-board-entries", headers: headers
+      get "/api/v1/job_board_entries", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["isEmpty"]).to be(false)
-      titles = response.parsed_body["jobBoardEntries"].map { |item| item["title"] }
+      expect(response.parsed_body["is_empty"]).to be(false)
+      titles = response.parsed_body["job_board_entries"].map { |item| item["title"] }
       expect(titles).to eq([ "Engineer" ])
-      expect(response.parsed_body["jobBoardEntries"].first["jobBoardTags"].map { |item| item["name"] })
+      expect(response.parsed_body["job_board_entries"].first["job_board_tags"].map { |item| item["name"] })
         .to eq([ "Remote" ])
     end
 
     it "requires authentication" do
-      get "/api/job-board-entries"
+      get "/api/v1/job_board_entries"
 
       expect(response).to have_http_status(:unauthorized)
     end
   end
 
-  describe "GET /api/job-board-entries/:id" do
+  describe "GET /api/v1/job_board_entries/:id" do
     it "returns an owned entry" do
       entry = create(:job_board_entry, user: user, title: "Engineer", number: 1)
 
-      get "/api/job-board-entries/#{entry.id}", headers: headers
+      get "/api/v1/job_board_entries/#{entry.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["jobBoardEntry"]["title"]).to eq("Engineer")
+      expect(response.parsed_body["job_board_entry"]["title"]).to eq("Engineer")
     end
 
     it "forbids another user's entry" do
       entry = create(:job_board_entry, number: 1)
 
-      get "/api/job-board-entries/#{entry.id}", headers: headers
+      get "/api/v1/job_board_entries/#{entry.id}", headers: headers
 
       expect(response).to have_http_status(:forbidden)
       expect(response.parsed_body).to eq(
@@ -50,11 +50,11 @@ RSpec.describe "Job board entries" do
     end
   end
 
-  describe "POST /api/job-board-entries" do
+  describe "POST /api/v1/job_board_entries" do
     it "creates an entry with the next number and tags" do
       create(:job_board_entry, user: user, status: "PENDING", number: 1)
 
-      post "/api/job-board-entries",
+      post "/api/v1/job_board_entries",
         params: {
           title: "PM",
           company: "Globex",
@@ -64,22 +64,22 @@ RSpec.describe "Job board entries" do
           description: "Role",
           status: "PENDING",
           tags: [ "Remote", "  Startup  " ],
-          closingDate: "2026-09-01"
+          closing_date: "2026-09-01"
         },
         headers: headers,
         as: :json
 
       expect(response).to have_http_status(:ok)
-      body = response.parsed_body["jobBoardEntry"]
+      body = response.parsed_body["job_board_entry"]
       expect(body).to include("title" => "PM", "company" => "Globex", "number" => 2, "status" => "PENDING")
-      expect(body["jobBoardTags"].map { |item| item["name"] }).to contain_exactly("Remote", "Startup")
+      expect(body["job_board_tags"].map { |item| item["name"] }).to contain_exactly("Remote", "Startup")
       expect(user.job_board_entries.find_by(title: "PM").closing_date).to be_present
     end
   end
 
-  describe "POST /api/job-board-entries/import" do
+  describe "POST /api/v1/job_board_entries/import" do
     it "imports entries and numbers them per status" do
-      post "/api/job-board-entries/import",
+      post "/api/v1/job_board_entries/import",
         params: {
           entries: [
             { title: "A", company: "Acme", status: "PENDING" },
@@ -91,14 +91,14 @@ RSpec.describe "Job board entries" do
         as: :json
 
       expect(response).to have_http_status(:ok)
-      imported = response.parsed_body["jobBoardEntries"]
+      imported = response.parsed_body["job_board_entries"]
       expect(imported.map { |item| [ item["title"], item["status"], item["number"] ] }).to eq(
         [ [ "A", "PENDING", 1 ], [ "B", "PENDING", 2 ], [ "C", "APPLIED", 1 ] ]
       )
     end
 
     it "rejects an empty entries list" do
-      post "/api/job-board-entries/import",
+      post "/api/v1/job_board_entries/import",
         params: { entries: [] },
         headers: headers,
         as: :json
@@ -110,12 +110,12 @@ RSpec.describe "Job board entries" do
     end
   end
 
-  describe "PUT /api/job-board-entries/:id" do
+  describe "PUT /api/v1/job_board_entries/:id" do
     it "updates fields and replaces tags" do
       entry = create(:job_board_entry, user: user, title: "Engineer", number: 1)
       entry.job_board_tags << create(:job_board_tag, user: user, name: "Old")
 
-      put "/api/job-board-entries/#{entry.id}",
+      put "/api/v1/job_board_entries/#{entry.id}",
         params: {
           title: "Staff Engineer",
           company: "Acme",
@@ -125,22 +125,22 @@ RSpec.describe "Job board entries" do
           description: "Updated",
           status: "PENDING",
           number: 1,
-          tagNames: [ "New" ]
+          tag_names: [ "New" ]
         },
         headers: headers,
         as: :json
 
       expect(response).to have_http_status(:ok)
-      body = response.parsed_body["jobBoardEntry"]
+      body = response.parsed_body["job_board_entry"]
       expect(body["title"]).to eq("Staff Engineer")
-      expect(body["jobBoardTags"].map { |item| item["name"] }).to eq([ "New" ])
+      expect(body["job_board_tags"].map { |item| item["name"] }).to eq([ "New" ])
     end
 
     it "reorders within a status" do
       first = create(:job_board_entry, user: user, title: "First", status: "PENDING", number: 1)
       second = create(:job_board_entry, user: user, title: "Second", status: "PENDING", number: 2)
 
-      put "/api/job-board-entries/#{second.id}",
+      put "/api/v1/job_board_entries/#{second.id}",
         params: {
           title: second.title,
           company: second.company,
@@ -159,7 +159,7 @@ RSpec.describe "Job board entries" do
       pending_entry = create(:job_board_entry, user: user, title: "Pending", status: "PENDING", number: 1)
       applied = create(:job_board_entry, user: user, title: "Applied", status: "APPLIED", number: 1)
 
-      put "/api/job-board-entries/#{pending_entry.id}",
+      put "/api/v1/job_board_entries/#{pending_entry.id}",
         params: {
           title: pending_entry.title,
           company: pending_entry.company,
@@ -175,23 +175,23 @@ RSpec.describe "Job board entries" do
     end
   end
 
-  describe "DELETE /api/job-board-entries/:id" do
+  describe "DELETE /api/v1/job_board_entries/:id" do
     it "deletes an entry and closes the number gap" do
       first = create(:job_board_entry, user: user, title: "First", number: 1)
       second = create(:job_board_entry, user: user, title: "Second", number: 2)
       third = create(:job_board_entry, user: user, title: "Third", number: 3)
 
-      delete "/api/job-board-entries/#{second.id}", headers: headers
+      delete "/api/v1/job_board_entries/#{second.id}", headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["jobBoardEntry"]["id"]).to eq(second.id)
+      expect(response.parsed_body["job_board_entry"]["id"]).to eq(second.id)
       expect(JobBoardEntry.find_by(id: second.id)).to be_nil
       expect(first.reload.number).to eq(1)
       expect(third.reload.number).to eq(2)
     end
   end
 
-  describe "GET /api/job-board-entries/stats" do
+  describe "GET /api/v1/job_board_entries/stats" do
     it "returns counts, weekly totals, response rate, and top tags" do
       travel_to Time.utc(2026, 8, 21, 12, 0, 0) do
         create(:job_board_entry, user: user, status: "PENDING", number: 1)
@@ -203,7 +203,7 @@ RSpec.describe "Job board entries" do
         user.job_board_entries.second.job_board_tags << popular
         user.job_board_entries.third.job_board_tags << other
 
-        get "/api/job-board-entries/stats", headers: headers
+        get "/api/v1/job_board_entries/stats", headers: headers
 
         expect(response).to have_http_status(:ok)
         body = response.parsed_body
@@ -214,45 +214,45 @@ RSpec.describe "Job board entries" do
           "interview" => 1,
           "offered" => 0
         )
-        expect(body["thisWeek"]).to eq(3)
-        expect(body["lastWeek"]).to eq(0)
-        expect(body["responseRate"]).to eq(33)
-        expect(body["topTags"].first).to eq("name" => "Remote", "count" => 2)
+        expect(body["this_week"]).to eq(3)
+        expect(body["last_week"]).to eq(0)
+        expect(body["response_rate"]).to eq(33)
+        expect(body["top_tags"].first).to eq("name" => "Remote", "count" => 2)
       end
     end
   end
 
-  describe "POST /api/job-board-entries/:id/cv" do
+  describe "POST /api/v1/job_board_entries/:id/cv" do
     after { clear_shrine_storage }
 
     it "stores PDF text on the entry" do
       entry = create(:job_board_entry, user: user, number: 1)
 
-      post "/api/job-board-entries/#{entry.id}/cv",
-        params: { cvText: "Cover of skills" },
+      post "/api/v1/job_board_entries/#{entry.id}/cv",
+        params: { cv_text: "Cover of skills" },
         headers: headers
 
       expect(response).to have_http_status(:ok)
-      body = response.parsed_body["jobBoardEntry"]
-      expect(body["cvText"]).to eq("Cover of skills")
-      expect(body["cvKey"]).to be_nil
-      expect(body["cvFilename"]).to be_nil
+      body = response.parsed_body["job_board_entry"]
+      expect(body["cv_text"]).to eq("Cover of skills")
+      expect(body["cv_key"]).to be_nil
+      expect(body["cv_filename"]).to be_nil
     end
 
     it "stores a PDF file and serves it from /uploads" do
       entry = create(:job_board_entry, user: user, number: 1)
 
-      post "/api/job-board-entries/#{entry.id}/cv",
+      post "/api/v1/job_board_entries/#{entry.id}/cv",
         params: { file: pdf_upload("resume.pdf") },
         headers: headers
 
       expect(response).to have_http_status(:ok)
-      body = response.parsed_body["jobBoardEntry"]
-      expect(body["cvFilename"]).to eq("resume.pdf")
-      expect(body["cvKey"]).to end_with(".pdf")
-      expect(body["cvText"]).to be_nil
+      body = response.parsed_body["job_board_entry"]
+      expect(body["cv_filename"]).to eq("resume.pdf")
+      expect(body["cv_key"]).to end_with(".pdf")
+      expect(body["cv_text"]).to be_nil
 
-      get "/uploads/#{body["cvKey"]}", headers: headers
+      get "/api/v1/uploads/#{body["cv_key"]}", headers: headers
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("application/pdf")
@@ -262,7 +262,7 @@ RSpec.describe "Job board entries" do
     it "rejects a non-pdf file" do
       entry = create(:job_board_entry, user: user, number: 1)
 
-      post "/api/job-board-entries/#{entry.id}/cv",
+      post "/api/v1/job_board_entries/#{entry.id}/cv",
         params: { file: text_upload("notes.txt") },
         headers: headers
 
@@ -273,27 +273,27 @@ RSpec.describe "Job board entries" do
     it "clears the CV when neither text nor file is sent" do
       entry = create(:job_board_entry, user: user, number: 1, cv_text: "old")
 
-      post "/api/job-board-entries/#{entry.id}/cv", params: {}, headers: headers
+      post "/api/v1/job_board_entries/#{entry.id}/cv", params: {}, headers: headers
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body["jobBoardEntry"]["cvText"]).to be_nil
+      expect(response.parsed_body["job_board_entry"]["cv_text"]).to be_nil
     end
   end
 
-  describe "POST /api/job-board-entries/:id/cover-letter" do
+  describe "POST /api/v1/job_board_entries/:id/cover_letter" do
     after { clear_shrine_storage }
 
     it "stores a cover letter PDF" do
       entry = create(:job_board_entry, user: user, number: 1)
 
-      post "/api/job-board-entries/#{entry.id}/cover-letter",
+      post "/api/v1/job_board_entries/#{entry.id}/cover_letter",
         params: { file: pdf_upload("letter.pdf") },
         headers: headers
 
       expect(response).to have_http_status(:ok)
-      body = response.parsed_body["jobBoardEntry"]
-      expect(body["coverLetterFilename"]).to eq("letter.pdf")
-      expect(body["coverLetterKey"]).to end_with(".pdf")
+      body = response.parsed_body["job_board_entry"]
+      expect(body["cover_letter_filename"]).to eq("letter.pdf")
+      expect(body["cover_letter_key"]).to end_with(".pdf")
     end
   end
 

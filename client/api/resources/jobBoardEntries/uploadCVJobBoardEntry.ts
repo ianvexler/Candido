@@ -1,15 +1,20 @@
 import apiClient from "@/api/apiClient";
+import { JobBoardEntry } from "@/lib/types";
 
-export const uploadCVJobBoardEntry = async (id: number, cvText?: string, cvFile?: File) => {
+type UploadCVResponse = {
+  job_board_entry: JobBoardEntry;
+};
+
+export const uploadCVJobBoardEntry = async (id: number, cvText?: string, cvFile?: File): Promise<UploadCVResponse> => {
   const formData = new FormData();
   if (cvFile) {
     formData.append("file", cvFile);
   }
   if (cvText) {
-    formData.append("cvText", cvText);
+    formData.append("cv_text", cvText);
   }
 
-  const response = await apiClient.post(`/api/job-board-entries/${id}/cv`, formData, {
+  const response = await apiClient.post(`/job_board_entries/${id}/cv`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     }

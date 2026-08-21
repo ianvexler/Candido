@@ -12,6 +12,6 @@ export type BulkImportEntry = {
 };
 
 export const bulkImportJobBoardEntries = async (entries: BulkImportEntry[]) => {
-  const response = await apiClient.post("/api/job-board-entries/import", { entries });
+  const response = await apiClient.post("/job_board_entries/import", { entries });
   return response.data;
 };

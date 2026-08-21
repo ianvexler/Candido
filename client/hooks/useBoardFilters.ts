@@ -70,7 +70,7 @@ export const useBoardFilters = (
 
     if (tags.length > 0) {
       result = result.filter((e) =>
-        e.jobBoardTags?.some((t) => tags.includes(t.name))
+        e.job_board_tags?.some((t) => tags.includes(t.name))
       );
     }
     return result;

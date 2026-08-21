@@ -48,9 +48,9 @@ const UsersTable = () => {
           <TableRow key={user.id}>
             <TableCell>{user.name}</TableCell>
             <TableCell>{user.email}</TableCell>
-            <TableCell>{user.jobBoardEntriesCount ?? 0}</TableCell>
+            <TableCell>{user.job_board_entries_count ?? 0}</TableCell>
             <TableCell>
-              {user.lastLoginAt ? format(user.lastLoginAt, "MM/dd/yyyy HH:mm") : "-"}
+              {user.last_login_at ? format(user.last_login_at, "MM/dd/yyyy HH:mm") : "-"}
             </TableCell>
             <TableCell>
               {user.admin ? "Yes" : "No"}

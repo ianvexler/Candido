@@ -58,16 +58,16 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
         </div>
 
         <div className="px-4 text-xs mt-4">
-          {entry.jobBoardTags?.length > 0 && (
+          {entry.job_board_tags?.length > 0 && (
             <div className="flex items-center gap-1 my-2">
               <TagIcon className="size-4" strokeWidth={1} />
-              <p>{entry.jobBoardTags.map((tag) => tag.name).join(", ")}</p>
+              <p>{entry.job_board_tags.map((tag) => tag.name).join(", ")}</p>
             </div>
           )}
 
-          {/* {entry.jobBoardTags?.length > 0 && (
+          {/* {entry.job_board_tags?.length > 0 && (
             <div className="flex items-center gap-1 overflow-hidden">
-              {entry.jobBoardTags.map((tag) => (
+              {entry.job_board_tags.map((tag) => (
                 <Badge key={tag.id} className="text-2xs" variant="outline">
                   {tag.name}
                 </Badge>
@@ -76,7 +76,7 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
           )} */}
 
           <div className="border-t border-border pt-3 mt-4 flex justify-between items-center gap-2">
-            {(entry.location || entry.createdAt) && (
+            {(entry.location || entry.created_at) && (
               <>
                 <div className="flex items-center gap-1 min-w-0 max-w-[50%]">
                   {entry.location && (
@@ -88,20 +88,20 @@ const JobBoardCard = ({ entry, index, onSelectJob, displayStatus }: JobBoardCard
                 </div>
 
                 {/* <div className="flex items-center gap-1 shrink-0">
-                  {entry.createdAt && (
+                  {entry.created_at && (
                     <>
                       <CalendarIcon className="size-4" strokeWidth={1} />
-                      <p>{format(new Date(entry.createdAt), "MMM d, yyyy")}</p>
+                      <p>{format(new Date(entry.created_at), "MMM d, yyyy")}</p>
                     </>
                   )}
                 </div> */}
 
                 <div>
-                  {entry.closingDate && (
+                  {entry.closing_date && (
                     <div className="flex items-center gap-1">
-                      <CalendarIcon className={classNames("size-4", closingDateColor(entry.closingDate))} strokeWidth={1} />
-                      <p className={classNames("text-xs", closingDateColor(entry.closingDate))}>
-                        {format(new Date(entry.closingDate), "MMM d, yyyy")}
+                      <CalendarIcon className={classNames("size-4", closingDateColor(entry.closing_date))} strokeWidth={1} />
+                      <p className={classNames("text-xs", closingDateColor(entry.closing_date))}>
+                        {format(new Date(entry.closing_date), "MMM d, yyyy")}
                       </p>
                     </div>
                   )}

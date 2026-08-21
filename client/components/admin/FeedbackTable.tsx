@@ -15,7 +15,7 @@ const FeedbackTable = () => {
   useEffect(() => {
     getFeedbackEntries().then((response) => {
       setLoading(true);
-      setFeedbackEntries(response.feedbackEntries);
+      setFeedbackEntries(response.feedback_entries);
     }).catch((error) => {
       console.error(error);
       toast.error("Failed to get feedback entries");
@@ -59,7 +59,7 @@ const FeedbackTable = () => {
             <TableCell>{feedbackEntry.title}</TableCell>
             <TableCell>{feedbackEntry.content}</TableCell>
             <TableCell>{capitalize(feedbackEntry.type.toLowerCase())}</TableCell>
-            <TableCell>{format(feedbackEntry.createdAt, "MM/dd/yyyy HH:mm")}</TableCell>
+            <TableCell>{format(feedbackEntry.created_at, "MM/dd/yyyy HH:mm")}</TableCell>
           </TableRow>
         ))}
       </TableBody>

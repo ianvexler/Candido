@@ -7,7 +7,7 @@ class UsersController < ApplicationController
       users: serialize(
         User.all,
         with: UserBlueprint,
-        entry_counts: JobBoardEntry.group(:userId).count
+        entry_counts: JobBoardEntry.group(:user_id).count
       )
     }
   end

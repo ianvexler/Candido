@@ -1,67 +1,14 @@
-# == Schema Information
-#
-# Table name: JobBoardEntry
-#
-#  id                  :integer          not null, primary key
-#  closingDate         :datetime
-#  company             :text             not null
-#  coverLetterFilename :text
-#  coverLetterKey      :text
-#  coverLetterText     :text
-#  createdAt           :datetime         not null
-#  cvFilename          :text
-#  cvKey               :text
-#  cvText              :text
-#  description         :text
-#  location            :text
-#  number              :integer          not null
-#  salary              :text
-#  status              :enum             default("PENDING"), not null
-#  title               :text             not null
-#  updatedAt           :datetime         not null
-#  url                 :text
-#  userId              :integer          not null
-#
-# Indexes
-#
-#  JobBoardEntry_title_idx                 (title)
-#  JobBoardEntry_userId_status_number_key  (userId,status,number) UNIQUE
-#
-# Foreign Keys
-#
-#  JobBoardEntry_userId_fkey  (userId => User.id) ON DELETE => restrict ON UPDATE => cascade
-#
 class JobBoardEntry < ApplicationRecord
-  include PrismaRecord
-
   STATUSES = %w[PENDING APPLIED ASSESSMENT INTERVIEW OFFERED REJECTED ACCEPTED ARCHIVED].freeze
-  JOIN_TABLE = "_JobBoardEntryToJobBoardTag".freeze
 
-  use_prisma_table "JobBoardEntry"
-  prisma_aliases(
-    user_id: :userId,
-    created_at: :createdAt,
-    updated_at: :updatedAt,
-    cover_letter_text: :coverLetterText,
-    cover_letter_key: :coverLetterKey,
-    cover_letter_filename: :coverLetterFilename,
-    cv_text: :cvText,
-    cv_key: :cvKey,
-    cv_filename: :cvFilename,
-    closing_date: :closingDate
-  )
-
-  belongs_to :user, foreign_key: "userId"
-  has_many :job_board_entry_notes, dependent: :destroy, foreign_key: "jobBoardEntryId"
-  has_and_belongs_to_many :job_board_tags,
-    join_table: JOIN_TABLE,
-    foreign_key: "A",
-    association_foreign_key: "B"
+  belongs_to :user
+  has_many :job_board_entry_notes, dependent: :destroy
+  has_and_belongs_to_many :job_board_tags
 
   enum :status, STATUSES.index_by(&:itself), default: "PENDING", validate: true
 
   validates :title, :company, :number, presence: true
-  validates :number, uniqueness: { scope: [ :userId, :status ] }
+  validates :number, uniqueness: { scope: [ :user_id, :status ] }
 
   RESPONDED_STATUSES = (STATUSES - %w[PENDING APPLIED ARCHIVED]).freeze
 
@@ -132,8 +79,8 @@ class JobBoardEntry < ApplicationRecord
         rejected: grouped["REJECTED"] || 0,
         accepted: grouped["ACCEPTED"] || 0
       },
-      this_week: where(user: user).where(createdAt: this_week_start..now).count,
-      last_week: where(user: user).where(createdAt: last_week_start..last_week_end).count,
+      this_week: where(user: user).where(created_at: this_week_start..now).count,
+      last_week: where(user: user).where(created_at: last_week_start..last_week_end).count,
       response_rate: all_count.zero? ? 0 : ((responded * 100.0) / all_count).round,
       top_tags: top_tags_for(user)
     }
@@ -142,10 +89,10 @@ class JobBoardEntry < ApplicationRecord
   def self.top_tags_for(user)
     JobBoardTag.where(user: user)
       .left_joins(:job_board_entries)
-      .group("JobBoardTag.id")
-      .order(Arel.sql(%q{COUNT("JobBoardEntry"."id") DESC}))
+      .group("job_board_tags.id")
+      .order(Arel.sql("COUNT(job_board_entries.id) DESC"))
       .limit(5)
-      .pluck("JobBoardTag.name", Arel.sql(%q{COUNT("JobBoardEntry"."id")}))
+      .pluck("job_board_tags.name", Arel.sql("COUNT(job_board_entries.id)"))
       .map { |name, count| { name: name, count: count } }
   end
 
@@ -175,7 +122,7 @@ class JobBoardEntry < ApplicationRecord
       owner_id = user_id
       destroy!
 
-      self.class.where(userId: owner_id, status: column_status)
+      self.class.where(user_id: owner_id, status: column_status)
         .where(self.class.arel_table[:number].gt(deleted_number))
         .order(:number)
         .each_with_index { |entry, index| entry.update!(number: deleted_number + index) }
@@ -221,7 +168,7 @@ class JobBoardEntry < ApplicationRecord
   def make_room_for!(next_status, next_number)
     update_column(:number, -1) if next_status == status && next_number != number
 
-    self.class.where(userId: user_id, status: next_status)
+    self.class.where(user_id: user_id, status: next_status)
       .where(self.class.arel_table[:number].gteq(next_number))
       .where.not(id: id)
       .order(number: :desc)

@@ -74,10 +74,10 @@ const HomePage = () => {
             </CardHeader>
 
             <CardContent>
-              <p className="text-2xl font-semibold">{stats?.thisWeek ?? "—"}</p>
+              <p className="text-2xl font-semibold">{stats?.this_week ?? "—"}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {stats != null
-                  ? `${stats.thisWeek >= stats.lastWeek ? "+" : ""}${stats.thisWeek - stats.lastWeek} from last week`
+                  ? `${stats.this_week >= stats.last_week ? "+" : ""}${stats.this_week - stats.last_week} from last week`
                   : "—"}
               </p>
             </CardContent>
@@ -90,7 +90,7 @@ const HomePage = () => {
             </CardHeader>
 
             <CardContent>
-              <p className="text-2xl font-semibold">{stats?.responseRate ?? "—"}%</p>
+              <p className="text-2xl font-semibold">{stats?.response_rate ?? "—"}%</p>
               <p className="text-xs text-muted-foreground mt-1">{stats?.counts.applied ?? "—"} of {stats?.counts.total ?? "—"} applications</p>
             </CardContent>
           </Card>
@@ -160,13 +160,13 @@ const HomePage = () => {
             </CardHeader>
 
             <CardContent>
-              {stats?.topTags && stats?.topTags.length > 0 ? (
+              {stats?.top_tags && stats?.top_tags.length > 0 ? (
                 <>
                   <CardDescription className="mb-3">
                     Most used tags across your applications
                   </CardDescription>
                   <div className="space-y-2 text-sm">
-                    {stats?.topTags.map((tag) => (
+                    {stats?.top_tags.map((tag) => (
                       <div key={tag.name} className="flex justify-between">
                         <span className="text-muted-foreground">{tag.name}</span>
                         <span className="text-muted-foreground">{tag.count}</span>

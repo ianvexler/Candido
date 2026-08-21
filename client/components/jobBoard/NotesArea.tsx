@@ -82,7 +82,7 @@ const NotesArea = ({ jobBoardEntry, notes, loading, onNoteAdded }: NotesAreaProp
 
               <div className="flex justify-end items-center">
                 <p className="text-xs text-muted-foreground">
-                  {format(new Date(note.createdAt), "MM/dd/yyyy")}
+                  {format(new Date(note.created_at), "MM/dd/yyyy")}
                 </p>
               </div>
             </CardContent>

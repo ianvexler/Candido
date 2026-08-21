@@ -22,4 +22,8 @@ if [ "${RAILS_ENV}" = "production" ]; then
   esac
 fi
 
+if [ "${1}" = "./bin/rails" ] && [ "${2}" = "server" ]; then
+  ./bin/rails db:migrate
+fi
+
 exec "${@}"

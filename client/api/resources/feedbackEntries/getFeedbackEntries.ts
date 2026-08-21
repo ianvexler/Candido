@@ -1,7 +1,12 @@
 import apiClient from "@/api/apiClient";
+import { FeedbackEntry } from "@/lib/types";
 
-const getFeedbackEntries = async () => {
-  const response = await apiClient.get('/api/feedback-entries');
+type GetFeedbackEntriesResponse = {
+  feedback_entries: FeedbackEntry[];
+};
+
+const getFeedbackEntries = async (): Promise<GetFeedbackEntriesResponse> => {
+  const response = await apiClient.get('/feedback_entries');
   return response.data;
 };
 

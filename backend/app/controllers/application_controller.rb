@@ -1,6 +1,5 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
-  include CamelCaseJson
   include Authenticatable
 
   rescue_from ApiError, with: :render_api_error

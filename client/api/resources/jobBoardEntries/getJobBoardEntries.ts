@@ -2,11 +2,11 @@ import { JobBoardEntry } from "@/lib/types";
 import apiClient from "../../apiClient";
 
 type GetJobBoardEntriesResponse = {
-  jobBoardEntries: JobBoardEntry[];
-  isEmpty: boolean;
+  job_board_entries: JobBoardEntry[];
+  is_empty: boolean;
 };
 
 export const getJobBoardEntries = async (): Promise<GetJobBoardEntriesResponse> => {
-  const response = await apiClient.get('/api/job-board-entries');
+  const response = await apiClient.get('/job_board_entries');
   return response.data;
 };

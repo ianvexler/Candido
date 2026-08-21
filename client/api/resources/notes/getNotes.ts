@@ -6,6 +6,6 @@ type GetNotesResponse = {
 };
 
 export const getNotes = async (jobBoardEntryId: number): Promise<GetNotesResponse> => {
-  const response = await apiClient.get(`/api/notes/${jobBoardEntryId}`);
+  const response = await apiClient.get(`/notes/${jobBoardEntryId}`);
   return response.data;
 };
