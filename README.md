@@ -26,7 +26,7 @@ Add applications easily and upload the description, your CV and cover letter. Al
 
 <hr />
 
-A full-stack app with a Next.js client and an Express API server, run via Docker Compose.
+A full-stack app with a Next.js client and a Rails API, run via Docker Compose. Rails talks to the existing Prisma Postgres schema.
 
 ## Prerequisites
 
@@ -40,22 +40,60 @@ From the project root:
 ./run stack
 ```
 
-This builds and starts the full stack in **development mode** with hot reload:
+This builds and starts the stack in **development mode** with hot reload:
 
 | Service | URL |
 |---------|-----|
 | **Client** (Next.js) | [http://localhost:3000](http://localhost:3000) |
-| **Server** (Express API) | [http://localhost:8000](http://localhost:8000) |
+| **API** (Rails) | [http://localhost:8000](http://localhost:8000) |
 | **Database** (PostgreSQL) | localhost:5432 |
-| **Prisma Studio** | [http://localhost:5555](http://localhost:5555) |
 
-Stop the stack with `Ctrl+C`.
+The client calls `http://localhost:8000`. Rails uses the same `candido` database as Prisma (`DATABASE_URL` on the `backend` service). Do not run `db:migrate` / `db:prepare` against that database.
+
+Stop the stack with `Ctrl+C`, or `./run stop` if it is detached.
+
+The Express app is still in `server/` if you need it:
+
+```bash
+docker compose --profile node up server
+```
+
+It listens on [http://localhost:8002](http://localhost:8002). Prisma Studio: `./run server:prisma:studio` → [http://localhost:5555](http://localhost:5555).
 
 ## Other commands
 
 ```bash
-./run client <command>           # Run a command in the client container (e.g. ./run client npm run build)
-./run server <command>           # Run a command in the server container (e.g. ./run server npm start)
-./run server:prisma <command>    # Run Prisma CLI (e.g. ./run server:prisma migrate dev)
-./run server:prisma:studio       # Start Prisma Studio at http://localhost:5555
+./run rspec                    # Rails request/model specs
+./run rails <command>         # e.g. ./run rails console
+./run bundle:install          # bundle install in the backend container
+./run lint                    # RuboCop + ESLint
+./run client <command>        # e.g. ./run client npm run build
+./run server:prisma <command>  # Prisma CLI against the shared database
 ```
+
+## Production
+
+Live deploys Rails via `docker-compose.prod.yml` and **Deploy to Production**. The API image is `ghcr.io/<owner>/candido-backend`. Do not run `db:migrate` or `db:prepare` against the Prisma database.
+
+The Next.js API origin is baked in at image build (`NEXT_PUBLIC_API_URL`). Keep that secret equal to the public API URL the browser already uses.
+
+Required GitHub secrets:
+
+| Secret | Notes |
+|--------|--------|
+| `EC2_HOST`, `EC2_SSH_KEY`, `EC2_APP_PATH` | Existing deploy target |
+| `NEXT_PUBLIC_API_URL` | Live API origin, baked into the client image |
+| `CORS_ORIGIN` | Live site origin, e.g. `https://candidohq.com` |
+| `SECRET_KEY_BASE` | Rails only. Generate with `./run rails secret` |
+| `DATABASE_URL` | Same Postgres URL Prisma uses |
+| `AWS_BUCKET_NAME`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Existing uploads bucket |
+| `BREVO_SMTP_LOGIN`, `BREVO_SMTP_KEY` | Verification / feedback email |
+
+Rollback to Express (images stay on the box; `candido-server:latest` on GHCR is left untouched):
+
+```bash
+docker-compose -f docker-compose.prod.yml --env-file backend/.env down
+docker-compose -f docker-compose.prod.express.yml --env-file server/.env up -d
+```
+
+An optional second instance can still use **Deploy Rails (test instance)** (`EC2_RAILS_HOST`, `EC2_RAILS_APP_PATH`, `NEXT_PUBLIC_RAILS_API_URL`).

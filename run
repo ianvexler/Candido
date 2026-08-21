@@ -7,30 +7,93 @@ COMMAND=$1
 case "$COMMAND" in
   stack)
     echo "Starting docker compose stack..."
-    DOCKER_BUILDKIT=1 BUILDKIT_INLINE_CACHE=0 BUILDKIT_PROVENANCE=0 docker compose up --build --remove-orphans
+    docker compose up --build
     ;;
-  
+
+  stack-detach)
+    echo "Starting docker compose stack in detached mode..."
+    docker compose up -d --build
+    ;;
+
+  stop)
+    echo "Stopping docker compose stack..."
+    docker compose down
+    ;;
+
+  logs)
+    echo "Showing logs..."
+    docker compose logs -f
+    ;;
+
+  bundle:install)
+    echo "Running bundle install inside backend container..."
+    docker compose run --rm --no-deps backend bundle install
+    ;;
+
+  rails)
+    echo "Running rails command inside backend container: ${*:2}"
+    docker compose run --rm backend bin/rails "${@:2}"
+    ;;
+
+  lint)
+    echo "Running linters for backend and client..."
+
+    echo "→ RuboCop (Rails backend)..."
+    docker compose run --rm --no-deps backend bundle exec rubocop
+
+    echo "→ ESLint (Next.js client)..."
+    docker compose run --rm --no-deps client npm run lint
+    ;;
+
+  lint:fix)
+    echo "Auto-fixing backend and client code..."
+
+    echo "→ RuboCop autofix (backend)..."
+    docker compose run --rm --no-deps backend bundle exec rubocop -A
+
+    echo "→ ESLint autofix (client)..."
+    docker compose run --rm --no-deps client npm run lint:fix
+    ;;
+
+  npm)
+    echo "Running npm command inside client container: ${*:2}"
+    docker compose run --rm client npm "${@:2}"
+    ;;
+
+  npx)
+    echo "Running npx command inside client container: ${*:2}"
+    docker compose run --rm client npx "${@:2}"
+    ;;
+
+  rspec)
+    echo "Running rspec tests inside backend container..."
+    docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgresql://postgres:password@db:5432/backend_test backend bash -c "bin/rails db:test:prepare && bundle exec rspec"
+    ;;
+
   client)
     echo "Running command in client..."
     docker compose run --rm client "${@:2}"
     ;;
-  
+
   server:prisma)
     echo "Running command in database..."
-    docker compose run --rm server npx prisma "${@:2}"
+    docker compose --profile node run --rm server npx prisma "${@:2}"
     ;;
 
   server:prisma:studio)
     echo "Running command in database..."
-    docker compose run --rm prisma-studio
+    docker compose --profile node run --rm prisma-studio
     ;;
 
   server)
     echo "Running command in server..."
-    docker compose run --rm server "${@:2}"
-    ;;  
+    docker compose --profile node run --rm server "${@:2}"
+    ;;
 
   *)
-    echo "Usage: $0 [stack|stack:prod|client|server|server:prisma|server:prisma:studio]"
+    echo "Usage: $0 {stack|stack-detach|stop|logs|bundle:install|rails|lint|lint:fix|npm|npx|rspec|client|server|server:prisma|server:prisma:studio}"
+    echo "The default stack is Next.js (3000) + Rails (8000) + Postgres."
+    echo "Start the legacy Express API with: docker compose --profile node up server"
     exit 1
+    ;;
 esac

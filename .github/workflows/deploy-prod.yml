@@ -22,6 +22,35 @@ jobs:
           ref: ${{ env.REF }}
           fetch-depth: 0
 
+      - name: Require production secrets
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: |
+          set -euo pipefail
+          for var in NEXT_PUBLIC_API_URL SECRET_KEY_BASE CORS_ORIGIN DATABASE_URL AWS_BUCKET_NAME; do
+            eval "val=\${$var:-}"
+            if [ -z "$val" ]; then
+              echo "$var GitHub secret is missing" >&2
+              exit 1
+            fi
+          done
+          case "$NEXT_PUBLIC_API_URL" in
+            *localhost*|*127.0.0.1*|https://prod_api_url_here)
+              echo "NEXT_PUBLIC_API_URL must be the live API origin" >&2
+              exit 1
+              ;;
+          esac
+          case "$CORS_ORIGIN" in
+            *localhost*|*127.0.0.1*)
+              echo "CORS_ORIGIN must be the live site origin" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -42,18 +71,16 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 
-      - name: Build and push server
+      - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
-          context: ./server
-          file: ./server/Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           no-cache: true
           tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-server:${{ env.REF }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-server:latest
-          build-args: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-backend:${{ env.REF }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-backend:latest
 
   deploy:
     needs: build
@@ -92,6 +119,23 @@ jobs:
               git reset --hard "origin/$REF"
             fi
 
+            mkdir -p backend server
+            cat > backend/.env << 'ENVEOF'
+            RAILS_ENV=production
+            PORT=8000
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            BREVO_SMTP_LOGIN=${{ secrets.BREVO_SMTP_LOGIN }}
+            BREVO_SMTP_KEY=${{ secrets.BREVO_SMTP_KEY }}
+            GITHUB_REPO_OWNER=${{ github.repository_owner }}
+            ENVEOF
+            chmod 600 backend/.env
+
             cat > server/.env << 'ENVEOF'
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
@@ -109,9 +153,11 @@ jobs:
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             export IMAGE_TAG="$REF"
+            export GITHUB_REPO_OWNER="${{ github.repository_owner }}"
 
-            docker image prune -af || true
+            docker-compose -f docker-compose.prod.express.yml --env-file server/.env down || true
             docker container prune -f || true
+            docker image prune -f || true
 
-            docker-compose -f docker-compose.prod.yml --env-file server/.env pull
-            docker-compose -f docker-compose.prod.yml --env-file server/.env up -d --force-recreate
+            docker-compose -f docker-compose.prod.yml --env-file backend/.env pull
+            docker-compose -f docker-compose.prod.yml --env-file backend/.env up -d --force-recreate
