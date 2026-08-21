@@ -25,7 +25,7 @@ RSpec.describe JobBoardEntry do
     expect(described_class.next_number_for(user, "APPLIED")).to eq(1)
   end
 
-  it "serializes status as the Prisma uppercase value" do
+  it "serializes status as the uppercase value" do
     entry = create(:job_board_entry, status: "INTERVIEW")
 
     expect(entry.status).to eq("INTERVIEW")

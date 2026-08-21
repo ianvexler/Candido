@@ -3,7 +3,7 @@ class FeedbackEntriesController < ApplicationController
   before_action :require_admin, only: :index
 
   def index
-    entries = FeedbackEntry.includes(:user).order(createdAt: :desc)
+    entries = FeedbackEntry.includes(:user).order(created_at: :desc)
     render json: { feedback_entries: serialize(entries, with: FeedbackEntryBlueprint) }
   end
 

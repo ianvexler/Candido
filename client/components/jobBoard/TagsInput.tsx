@@ -23,7 +23,7 @@ const TagsInput = ({ allEntries, tags, onTagsChange }: TagsInputProps) => {
 
   const allTags = useMemo(() => {
     const fromEntries = allEntries.flatMap(
-      (e) => e.jobBoardTags?.map((t) => t.name) ?? []
+      (e) => e.job_board_tags?.map((t) => t.name) ?? []
     );
     return [...new Set([...fromEntries, ...tags])].sort();
   }, [allEntries, tags]);

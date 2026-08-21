@@ -65,7 +65,7 @@ const MainEntryForm = ({ entry, onUpdateEntry }: MainEntryFormProps) => {
       const response = await updateJobBoardEntry(entry.id, title, company, location, salary, url, editor?.getHTML() ?? "", status, entry.number);
       toast.success("Job updated successfully");
 
-      onUpdateEntry(response.jobBoardEntry);
+      onUpdateEntry(response.job_board_entry);
     } catch (error) {
       console.error(error);
     } finally {

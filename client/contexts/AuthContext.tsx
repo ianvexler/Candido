@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const shouldShow =
       isAuthenticated &&
-      !user?.setupCompleted &&
+      !user?.setup_completed &&
       !setupModalExcludedRoutes.includes(pathname ?? "");
 
     if (shouldShow) {
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       queueMicrotask(() => setOpenSetupModal(false));
     }
-  }, [isAuthenticated, user?.setupCompleted, pathname]);
+  }, [isAuthenticated, user?.setup_completed, pathname]);
 
   const value = {
     user,

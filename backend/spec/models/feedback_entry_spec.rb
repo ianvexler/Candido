@@ -1,6 +1,6 @@
 require "rails_helper"
 RSpec.describe FeedbackEntry do
-  it "stores Prisma type and status values" do
+  it "stores type and status values" do
     entry = create(:feedback_entry, type: "BUG", status: "REVIEWED")
 
     expect(entry.type).to eq("BUG")

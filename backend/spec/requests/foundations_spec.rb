@@ -15,16 +15,16 @@ RSpec.describe "Foundations" do
     Rails.application.reload_routes!
   end
 
-  describe "camelCase JSON" do
-    it "underscores incoming keys and camelizes the response" do
+  describe "JSON params" do
+    it "passes through snake_case keys" do
       post "/foundations/echo",
-        params: { userId: 12, setupCompleted: true },
+        params: { user_id: 12, setup_completed: true },
         as: :json
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq(
-        "userId" => 12,
-        "setupCompleted" => true
+        "user_id" => 12,
+        "setup_completed" => true
       )
     end
   end
@@ -70,14 +70,14 @@ RSpec.describe "Foundations" do
       get "/foundations/me", headers: { "Cookie" => "auth_token=valid-token" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to eq("userId" => 7)
+      expect(response.parsed_body).to eq("user_id" => 7)
     end
 
     it "authenticates via a Bearer token" do
       get "/foundations/me", headers: { "Authorization" => "Bearer valid-token" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.parsed_body).to eq("userId" => 7)
+      expect(response.parsed_body).to eq("user_id" => 7)
     end
 
     it "rejects non-admins from admin endpoints" do

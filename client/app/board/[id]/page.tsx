@@ -21,7 +21,7 @@ const BoardJobEntry = ({ params }: BoardJobEntryPageProps) => {
 
     getJobBoardEntry(id).then((response) => {
       if (!cancelled) {
-        setJobEntry(response.jobBoardEntry);
+        setJobEntry(response.job_board_entry);
       }
     });
     return () => { cancelled = true; };

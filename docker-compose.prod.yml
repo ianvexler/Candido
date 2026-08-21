@@ -1,5 +1,5 @@
-# Live production stack. Images are built in CI. Do not run db:prepare / db:migrate
-# against the Prisma database. Rollback: docker-compose.prod.express.yml
+# Live production stack. Images are built in CI. Boot runs db:migrate (in-place
+# table rename). Do not run db:prepare or db:schema:load against production.
 
 services:
   client:

@@ -52,7 +52,7 @@ const BoardFilters = ({
   const allTags = useMemo(() => [
     ...new Set(
       jobBoardEntries.flatMap((e) =>
-        e.jobBoardTags?.map((t) => t.name) ?? []
+        e.job_board_tags?.map((t) => t.name) ?? []
       )
     ),
   ].sort(), [jobBoardEntries]);

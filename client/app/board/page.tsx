@@ -90,7 +90,7 @@ const BoardPage = () => {
 
     void getJobBoardEntries()
       .then((response) => {
-        setJobBoardEntries(response.jobBoardEntries);
+        setJobBoardEntries(response.job_board_entries);
       })
       .catch((error) => {
         console.error(error);
@@ -108,7 +108,7 @@ const BoardPage = () => {
     }
   
     void getJobBoardEntries()
-      .then((response) => setJobBoardEntries(response.jobBoardEntries))
+      .then((response) => setJobBoardEntries(response.job_board_entries))
       .catch((error) => {
         console.error(error);
         toast.error("Failed to refresh job board");

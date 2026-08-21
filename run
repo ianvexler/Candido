@@ -32,7 +32,7 @@ case "$COMMAND" in
 
   rails)
     echo "Running rails command inside backend container: ${*:2}"
-    docker compose run --rm backend bin/rails "${@:2}"
+    docker compose run --rm backend bin/rails "${*:2}"
     ;;
 
   lint)
@@ -57,12 +57,12 @@ case "$COMMAND" in
 
   npm)
     echo "Running npm command inside client container: ${*:2}"
-    docker compose run --rm client npm "${@:2}"
+    docker compose run --rm client npm "${*:2}"
     ;;
 
   npx)
     echo "Running npx command inside client container: ${*:2}"
-    docker compose run --rm client npx "${@:2}"
+    docker compose run --rm client npx "${*:2}"
     ;;
 
   rspec)
@@ -72,28 +72,12 @@ case "$COMMAND" in
 
   client)
     echo "Running command in client..."
-    docker compose run --rm client "${@:2}"
-    ;;
-
-  server:prisma)
-    echo "Running command in database..."
-    docker compose --profile node run --rm server npx prisma "${@:2}"
-    ;;
-
-  server:prisma:studio)
-    echo "Running command in database..."
-    docker compose --profile node run --rm prisma-studio
-    ;;
-
-  server)
-    echo "Running command in server..."
-    docker compose --profile node run --rm server "${@:2}"
+    docker compose run --rm client "${*:2}"
     ;;
 
   *)
-    echo "Usage: $0 {stack|stack-detach|stop|logs|bundle:install|rails|lint|lint:fix|npm|npx|rspec|client|server|server:prisma|server:prisma:studio}"
-    echo "The default stack is Next.js (3000) + Rails (8000) + Postgres."
-    echo "Start the legacy Express API with: docker compose --profile node up server"
+    echo "Usage: $0 {stack|stack-detach|stop|logs|bundle:install|rails|lint|lint:fix|npm|npx|rspec|client}"
+    echo "The stack is Next.js (3000) + Rails (8000) + Postgres."
     exit 1
     ;;
 esac

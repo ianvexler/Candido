@@ -75,8 +75,8 @@ const SheetPage = () => {
       .then((response) => {
         setIsLoading(true);
 
-        setJobBoardEntries(response.jobBoardEntries);
-        setIsEmpty(response.isEmpty);
+        setJobBoardEntries(response.job_board_entries);
+        setIsEmpty(response.is_empty);
       })
       .catch((error) => {
         console.error(error);
@@ -97,7 +97,7 @@ const SheetPage = () => {
     }
 
     void getJobBoardEntries()
-      .then((response) => setJobBoardEntries(response.jobBoardEntries))
+      .then((response) => setJobBoardEntries(response.job_board_entries))
       .catch((error) => {
         console.error(error);
         toast.error("Failed to refresh job board");
@@ -130,8 +130,8 @@ const SheetPage = () => {
     }
 
     return [...entries].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
       return dateB - dateA;
     });
   }, [filteredEntries, showRejected, showArchived, showAccepted, statusFilter]);
@@ -175,7 +175,7 @@ const SheetPage = () => {
     async (entry: JobBoardEntry, file: File) => {
       try {
         const response = await uploadCVJobBoardEntry(entry.id, undefined, file);
-        const updated = { ...entry, ...response.jobBoardEntry };
+        const updated = { ...entry, ...response.job_board_entry };
 
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
@@ -195,7 +195,7 @@ const SheetPage = () => {
     async (entry: JobBoardEntry, file: File) => {
       try {
         const response = await uploadCoverLetterJobBoardEntry(entry.id, undefined, file);
-        const updated = { ...entry, ...response.jobBoardEntry };
+        const updated = { ...entry, ...response.job_board_entry };
 
         setJobBoardEntries((prev) =>
           prev.map((e) => (e.id === entry.id ? updated : e))
@@ -212,14 +212,14 @@ const SheetPage = () => {
   );
 
   const handleCvDownload = useCallback(async (entry: JobBoardEntry) => {
-    if (!entry.cvKey) return;
+    if (!entry.cv_key) return;
     try {
-      const blob = await getFileUpload(entry.cvKey);
+      const blob = await getFileUpload(entry.cv_key);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = entry.cvFilename ?? "cv.pdf";
+      a.download = entry.cv_filename ?? "cv.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -229,14 +229,14 @@ const SheetPage = () => {
   }, []);
 
   const handleCoverLetterDownload = useCallback(async (entry: JobBoardEntry) => {
-    if (!entry.coverLetterKey) return;
+    if (!entry.cover_letter_key) return;
     try {
-      const blob = await getFileUpload(entry.coverLetterKey);
+      const blob = await getFileUpload(entry.cover_letter_key);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = entry.coverLetterFilename ?? "cover-letter.pdf";
+      a.download = entry.cover_letter_filename ?? "cover-letter.pdf";
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {

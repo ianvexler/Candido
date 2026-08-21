@@ -3,15 +3,15 @@ export type User = {
   email: string;
   name: string;
   sessions?: Session[];
-  setupCompleted: boolean;
+  setup_completed: boolean;
   admin: boolean;
-  lastLoginAt: Date;
-  jobBoardEntriesCount?: number;
+  last_login_at: Date;
+  job_board_entries_count?: number;
 }
 
 export type Session = {
   token: string;
-  expiresAt: Date;
+  expires_at: Date;
 }
 
 export enum JobStatus {
@@ -46,16 +46,16 @@ export type JobBoardEntry = {
   salary: string;
   url: string;
   status: JobStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  jobBoardTags: JobBoardTag[];
-  cvText?: string;
-  cvKey?: string;
-  cvFilename?: string;
-  coverLetterText?: string;
-  coverLetterKey?: string;
-  coverLetterFilename?: string;
-  closingDate?: Date;
+  created_at: Date;
+  updated_at: Date;
+  job_board_tags: JobBoardTag[];
+  cv_text?: string;
+  cv_key?: string;
+  cv_filename?: string;
+  cover_letter_text?: string;
+  cover_letter_key?: string;
+  cover_letter_filename?: string;
+  closing_date?: Date;
 }
 
 export type JobBoardTag = {
@@ -74,10 +74,10 @@ export enum FeedbackType {
 
 export type FeedbackEntry = {
   id: number;
-  userId: number;
+  user_id: number;
   user: User;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
   title: string;
   content: string;
   type: FeedbackType;
@@ -94,10 +94,10 @@ export type JobBoardEntriesStats = {
     accepted: number;
     rejected: number;
   };
-  thisWeek: number;
-  lastWeek: number;
-  responseRate: number;
-  topTags: {
+  this_week: number;
+  last_week: number;
+  response_rate: number;
+  top_tags: {
     name: string;
     count: number;
   }[];
@@ -105,9 +105,9 @@ export type JobBoardEntriesStats = {
 
 export type Note = {
   id: number;
-  userId: number;
+  user_id: number;
   user: User;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
   content: string;
 }

@@ -1,5 +1,9 @@
-import { JobStatus } from "@/lib/types";
+import { JobBoardEntry, JobStatus } from "@/lib/types";
 import apiClient from "../../apiClient";
+
+type UpdateJobBoardEntryResponse = {
+  job_board_entry: JobBoardEntry;
+};
 
 export const updateJobBoardEntry = async (
   id: number,
@@ -13,8 +17,8 @@ export const updateJobBoardEntry = async (
   number: number,
   tagNames?: string[],
   closingDate?: Date | null
-) => {
-  const response = await apiClient.put(`/api/job-board-entries/${id}`, {
+): Promise<UpdateJobBoardEntryResponse> => {
+  const response = await apiClient.put(`/job_board_entries/${id}`, {
     id,
     title,
     company,
@@ -24,8 +28,8 @@ export const updateJobBoardEntry = async (
     description,
     status,
     number,
-    tagNames,
-    closingDate,
+    tag_names: tagNames,
+    closing_date: closingDate,
   });
   return response.data;
 };

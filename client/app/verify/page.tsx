@@ -34,7 +34,7 @@ const VerifyPage = () => {
     }
 
     apiClient
-      .get<VerifyResponse>("/api/sessions/verify", { params: { token } })
+      .get<VerifyResponse>("/sessions/verify", { params: { token } })
       .then(() => {
         setStatus("success");
         setMessage("Your email has been verified. You can now sign in.");
