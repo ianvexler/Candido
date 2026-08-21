@@ -1,13 +1,28 @@
 class FinishPrismaRenameIfNeeded < ActiveRecord::Migration[8.0]
+  PRISMA_TABLES = {
+    "User" => :users,
+    "Session" => :sessions,
+    "JobBoardEntry" => :job_board_entries,
+    "JobBoardTag" => :job_board_tags,
+    "JobBoardEntryNotes" => :job_board_entry_notes,
+    "FeedbackEntry" => :feedback_entries,
+    "_JobBoardEntryToJobBoardTag" => :job_board_entries_tags
+  }.freeze
+
+  EMPTY_RAILS_DROP_ORDER = %i[
+    job_board_entries_tags
+    job_board_entry_notes
+    feedback_entries
+    job_board_tags
+    job_board_entries
+    sessions
+    users
+  ].freeze
+
   def up
-    if prisma_table?("User") && table_exists?(:users) && user_count(:users).zero?
-      drop_table :users
-    end
-
-    if prisma_table?("User") && !table_exists?(:users)
-      rename_prisma_schema!
-    end
-
+    drop_empty_rails_tables_if_prisma_still_present!
+    rename_remaining_prisma_tables!
+    rename_remaining_columns!
     repair_password_columns!
   end
 
@@ -21,8 +36,89 @@ class FinishPrismaRenameIfNeeded < ActiveRecord::Migration[8.0]
     connection.data_source_exists?(name)
   end
 
-  def user_count(table)
+  def row_count(table)
     select_value("SELECT COUNT(*) FROM #{connection.quote_table_name(table)}").to_i
+  end
+
+  def drop_empty_rails_tables_if_prisma_still_present!
+    return unless prisma_table?("User")
+    return unless table_exists?(:users)
+    return unless row_count(:users).zero?
+
+    EMPTY_RAILS_DROP_ORDER.each do |table|
+      drop_table table, force: :cascade if table_exists?(table)
+    end
+  end
+
+  def rename_remaining_prisma_tables!
+    PRISMA_TABLES.each do |prisma_name, rails_name|
+      next unless prisma_table?(prisma_name)
+      next if table_exists?(rails_name)
+
+      rename_table prisma_name, rails_name
+    end
+  end
+
+  def rename_remaining_columns!
+    rename_column_if_needed :users, "verificationToken", :verification_token
+    rename_column_if_needed :users, "verificationExpiresAt", :verification_expires_at
+    rename_column_if_needed :users, "setupCompleted", :setup_completed
+    rename_column_if_needed :users, "lastLoginAt", :last_login_at
+    rename_column_if_needed :users, "password", :password_digest
+    add_timestamps_if_needed :users
+
+    rename_column_if_needed :sessions, "userId", :user_id
+    rename_column_if_needed :sessions, "expiresAt", :expires_at
+    rename_column_if_needed :sessions, "createdAt", :created_at
+    rename_column_if_needed :sessions, "updatedAt", :updated_at
+
+    rename_column_if_needed :job_board_entries, "userId", :user_id
+    rename_column_if_needed :job_board_entries, "createdAt", :created_at
+    rename_column_if_needed :job_board_entries, "updatedAt", :updated_at
+    rename_column_if_needed :job_board_entries, "coverLetterText", :cover_letter_text
+    rename_column_if_needed :job_board_entries, "coverLetterKey", :cover_letter_key
+    rename_column_if_needed :job_board_entries, "coverLetterFilename", :cover_letter_filename
+    rename_column_if_needed :job_board_entries, "cvText", :cv_text
+    rename_column_if_needed :job_board_entries, "cvKey", :cv_key
+    rename_column_if_needed :job_board_entries, "cvFilename", :cv_filename
+    rename_column_if_needed :job_board_entries, "closingDate", :closing_date
+
+    rename_column_if_needed :job_board_tags, "userId", :user_id
+    rename_column_if_needed :job_board_tags, "createdAt", :created_at
+    rename_column_if_needed :job_board_tags, "updatedAt", :updated_at
+
+    rename_column_if_needed :job_board_entry_notes, "userId", :user_id
+    rename_column_if_needed :job_board_entry_notes, "jobBoardEntryId", :job_board_entry_id
+    rename_column_if_needed :job_board_entry_notes, "createdAt", :created_at
+    rename_column_if_needed :job_board_entry_notes, "updatedAt", :updated_at
+
+    rename_column_if_needed :feedback_entries, "userId", :user_id
+    rename_column_if_needed :feedback_entries, "createdAt", :created_at
+    rename_column_if_needed :feedback_entries, "updatedAt", :updated_at
+
+    rename_column_if_needed :job_board_entries_tags, "A", :job_board_entry_id
+    rename_column_if_needed :job_board_entries_tags, "B", :job_board_tag_id
+
+    drop_table "_prisma_migrations" if table_exists?("_prisma_migrations")
+  end
+
+  def rename_column_if_needed(table, from, to)
+    return unless table_exists?(table)
+    return unless column_exists?(table, from)
+    return if column_exists?(table, to)
+
+    rename_column table, from, to
+  end
+
+  def add_timestamps_if_needed(table)
+    return unless table_exists?(table)
+
+    unless column_exists?(table, :created_at)
+      add_column table, :created_at, :datetime, precision: 3, null: false, default: -> { "CURRENT_TIMESTAMP" }
+    end
+    unless column_exists?(table, :updated_at)
+      add_column table, :updated_at, :datetime, precision: 3, null: false, default: -> { "CURRENT_TIMESTAMP" }
+    end
   end
 
   def repair_password_columns!
@@ -39,56 +135,5 @@ class FinishPrismaRenameIfNeeded < ActiveRecord::Migration[8.0]
       SQL
       remove_column :users, :password
     end
-  end
-
-  def rename_prisma_schema!
-    rename_table "User", :users
-    rename_column :users, "verificationToken", :verification_token
-    rename_column :users, "verificationExpiresAt", :verification_expires_at
-    rename_column :users, "setupCompleted", :setup_completed
-    rename_column :users, "lastLoginAt", :last_login_at
-    rename_column :users, "password", :password_digest
-    add_column :users, :created_at, :datetime, precision: 3, null: false, default: -> { "CURRENT_TIMESTAMP" }
-    add_column :users, :updated_at, :datetime, precision: 3, null: false, default: -> { "CURRENT_TIMESTAMP" }
-
-    rename_table "Session", :sessions
-    rename_column :sessions, "userId", :user_id
-    rename_column :sessions, "expiresAt", :expires_at
-    rename_column :sessions, "createdAt", :created_at
-    rename_column :sessions, "updatedAt", :updated_at
-
-    rename_table "JobBoardEntry", :job_board_entries
-    rename_column :job_board_entries, "userId", :user_id
-    rename_column :job_board_entries, "createdAt", :created_at
-    rename_column :job_board_entries, "updatedAt", :updated_at
-    rename_column :job_board_entries, "coverLetterText", :cover_letter_text
-    rename_column :job_board_entries, "coverLetterKey", :cover_letter_key
-    rename_column :job_board_entries, "coverLetterFilename", :cover_letter_filename
-    rename_column :job_board_entries, "cvText", :cv_text
-    rename_column :job_board_entries, "cvKey", :cv_key
-    rename_column :job_board_entries, "cvFilename", :cv_filename
-    rename_column :job_board_entries, "closingDate", :closing_date
-
-    rename_table "JobBoardTag", :job_board_tags
-    rename_column :job_board_tags, "userId", :user_id
-    rename_column :job_board_tags, "createdAt", :created_at
-    rename_column :job_board_tags, "updatedAt", :updated_at
-
-    rename_table "JobBoardEntryNotes", :job_board_entry_notes
-    rename_column :job_board_entry_notes, "userId", :user_id
-    rename_column :job_board_entry_notes, "jobBoardEntryId", :job_board_entry_id
-    rename_column :job_board_entry_notes, "createdAt", :created_at
-    rename_column :job_board_entry_notes, "updatedAt", :updated_at
-
-    rename_table "FeedbackEntry", :feedback_entries
-    rename_column :feedback_entries, "userId", :user_id
-    rename_column :feedback_entries, "createdAt", :created_at
-    rename_column :feedback_entries, "updatedAt", :updated_at
-
-    rename_table "_JobBoardEntryToJobBoardTag", :job_board_entries_tags
-    rename_column :job_board_entries_tags, "A", :job_board_entry_id
-    rename_column :job_board_entries_tags, "B", :job_board_tag_id
-
-    drop_table "_prisma_migrations" if table_exists?("_prisma_migrations")
   end
 end
