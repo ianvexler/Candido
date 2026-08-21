@@ -1,0 +1,114 @@
+name: Deploy Rails (test instance)
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  REF: ${{ github.ref_name }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require production secrets
+        env:
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          NEXT_PUBLIC_RAILS_API_URL: ${{ secrets.NEXT_PUBLIC_RAILS_API_URL }}
+        run: |
+          set -euo pipefail
+          for var in SECRET_KEY_BASE CORS_ORIGIN DATABASE_URL AWS_BUCKET_NAME NEXT_PUBLIC_RAILS_API_URL; do
+            eval "val=\${$var:-}"
+            if [ -z "$val" ]; then
+              echo "$var GitHub secret is missing" >&2
+              exit 1
+            fi
+          done
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push client
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-client:rails
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_RAILS_API_URL }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/candido-backend:rails
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Deploy Rails to test EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_RAILS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          host_key_checking: false
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+
+            cd ${{ secrets.EC2_RAILS_APP_PATH }}
+
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            REF='${{ env.REF }}'
+            git fetch --prune --tags origin
+            git checkout "$REF"
+            git reset --hard "origin/$REF" || git checkout "tags/$REF"
+
+            mkdir -p backend
+            cat > backend/.env << 'ENVEOF'
+            RAILS_ENV=production
+            PORT=8000
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
+            CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+            AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }}
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            BREVO_SMTP_LOGIN=${{ secrets.BREVO_SMTP_LOGIN }}
+            BREVO_SMTP_KEY=${{ secrets.BREVO_SMTP_KEY }}
+            GITHUB_REPO_OWNER=${{ github.repository_owner }}
+            ENVEOF
+            chmod 600 backend/.env
+
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            export IMAGE_TAG=rails
+            export GITHUB_REPO_OWNER="${{ github.repository_owner }}"
+
+            docker-compose -f docker-compose.prod.yml --env-file backend/.env pull
+            docker-compose -f docker-compose.prod.yml --env-file backend/.env up -d --force-recreate

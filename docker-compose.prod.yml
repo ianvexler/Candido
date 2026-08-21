@@ -1,20 +1,21 @@
-# Images are built in CI and pushed to ghcr.io. Run: docker-compose pull && docker-compose up -d
+# Live production stack. Images are built in CI. Do not run db:prepare / db:migrate
+# against the Prisma database. Rollback: docker-compose.prod.express.yml
 
 services:
   client:
-    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-client:latest
+    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-client:${IMAGE_TAG:-latest}
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
     restart: unless-stopped
 
-  server:
-    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-server:latest
-    env_file: server/.env
+  backend:
+    image: ghcr.io/${GITHUB_REPO_OWNER:-ianvexler}/candido-backend:${IMAGE_TAG:-latest}
+    env_file: backend/.env
     ports:
       - "8000:8000"
     environment:
-      NODE_ENV: production
-    command: sh -c "npx prisma migrate deploy && npm start"
+      RAILS_ENV: production
+      PORT: 8000
     restart: unless-stopped

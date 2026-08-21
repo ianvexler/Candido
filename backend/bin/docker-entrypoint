@@ -1,0 +1,25 @@
+#!/bin/bash -e
+
+if [ -z "${LD_PRELOAD+x}" ]; then
+  LD_PRELOAD=$(find /usr/lib -name libjemalloc.so.2 -print -quit)
+  export LD_PRELOAD
+fi
+
+if [ "${RAILS_ENV}" = "production" ]; then
+  for var in SECRET_KEY_BASE DATABASE_URL CORS_ORIGIN AWS_BUCKET_NAME; do
+    eval "val=\${$var:-}"
+    if [ -z "$val" ]; then
+      echo "$var is required in production" >&2
+      exit 1
+    fi
+  done
+
+  case "$CORS_ORIGIN" in
+    *localhost*|*127.0.0.1*)
+      echo "CORS_ORIGIN must be the live site origin, not localhost" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+exec "${@}"
